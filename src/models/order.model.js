@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import { ORDER_STATUS, DELIVERY_PRIORITY } from '../constants/index.js';
+
 
 const orderItemSchema = new mongoose.Schema({
   name: {
@@ -17,12 +19,17 @@ const orderItemSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+
+
 const orderSchema = new mongoose.Schema({
+
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'El cliente es obligatorio']
   },
+
+
   items: {
     type: [orderItemSchema],
     validate: {
@@ -30,32 +37,44 @@ const orderSchema = new mongoose.Schema({
       message: 'El pedido debe tener al menos un item'
     }
   },
+
+
   deliveryAddress: {
     type: String,
     required: [true, 'La direccion de entrega es obligatoria']
   },
+
+
   total: {
     type: Number,
     default: 0
   },
+
+
   status: {
     type: String,
-    enum: ['created', 'assigned', 'picked_up', 'in_transit', 'delivered', 'cancelled'],
-    default: 'created'
+    enum: Object.values(ORDER_STATUS),
+    default: ORDER_STATUS.CREATED
   },
+
+
   priority: {
     type: String,
-    enum: ['low', 'normal', 'high'],
-    default: 'normal'
+    enum: Object.values(DELIVERY_PRIORITY),
+    default: DELIVERY_PRIORITY.NORMAL
   },
+
+
   delivery: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Delivery',
     default: null
   }
+
 }, {
   timestamps: true
 });
+
 
 const Order = mongoose.model('Order', orderSchema);
 

@@ -1,16 +1,21 @@
 import mongoose from 'mongoose';
+import { USER_ROLES } from '../constants/index.js';
+
 
 const userSchema = new mongoose.Schema({
+
   firstName: {
     type: String,
     required: [true, 'El nombre es obligatorio'],
     trim: true
   },
+
   lastName: {
     type: String,
     required: [true, 'El apellido es obligatorio'],
     trim: true
   },
+
   email: {
     type: String,
     required: [true, 'El email es obligatorio'],
@@ -18,15 +23,18 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+
   password: {
     type: String,
     required: [true, 'La contrasena es obligatoria']
   },
+
   role: {
     type: String,
-    enum: ['admin', 'customer', 'driver', 'store'],
-    default: 'customer'
+    enum: Object.values(USER_ROLES),
+    default: USER_ROLES.CUSTOMER
   },
+
   documents: {
     type: [
       {
@@ -36,9 +44,11 @@ const userSchema = new mongoose.Schema({
     ],
     default: []
   }
+
 }, {
   timestamps: true
 });
+
 
 const User = mongoose.model('User', userSchema);
 
