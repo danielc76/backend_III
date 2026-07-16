@@ -1,6 +1,14 @@
 # ShipNow API - Base
 
 API base para el ejercicio de refactorizacion a arquitectura por capas.
+En esta etapa se realizó la reorganización de la API aplicando una arquitectura profesional separando responsabilidades entre Routes, Controllers, Services y Repositories.
+
+- Router decide "a quién llamar".
+- Controller maneja HTTP.
+- Service Reglas de negocio, por ejemplo decide qué está permitido.
+- Repository sabe guardar y buscar.
+- Model define cómo son los datos.
+
 
 ## Instalacion
 
