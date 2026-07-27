@@ -16,8 +16,17 @@ export const createDelivery = async (deliveryData) => {
 };
 
 
-export const updateDelivery = async (id) => {
-  return await Delivery.findById(id);
+// Actualiza una entrega existente y devuelve el documento actualizado.
+export const updateDelivery = async (id, deliveryData) => {
+
+  return await Delivery.findByIdAndUpdate(
+    id,
+    deliveryData,
+    {
+      new: true
+    }
+  );
+
 };
 
 
@@ -28,4 +37,13 @@ export const saveDelivery = async (delivery) => {
 
 export const deleteDelivery = async (id) => {
   return await Delivery.findByIdAndDelete(id);
+};
+
+
+// Inserta múltiples entregas.
+// Se utiliza para la carga de datos de prueba mediante mocks.
+export const createDeliveries = async (deliveriesData) => {
+
+  return await Delivery.insertMany(deliveriesData);
+
 };
