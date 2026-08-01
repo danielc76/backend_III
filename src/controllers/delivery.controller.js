@@ -1,75 +1,107 @@
+// Importamos el Service porque el Controller se encarga de
+// recibir la petición HTTP y delegar la lógica de negocio.
 import * as deliveriesService from '../services/delivery.service.js';
 
-export const getDeliveries = async (req, res) => {
+
+// Obtiene todas las entregas.
+// El Controller recibe la petición y delega al Service.
+export const getDeliveries = async (req, res, next) => {
+
   try {
+
     const deliveries = await deliveriesService.getDeliveries();
+
     res.json(deliveries);
+
   } catch (error) {
-    res.status(500).send('Error del servidor');
+
+    next(error);
+
   }
+
 };
 
 
-export const getDeliveryById = async (req, res) => {
-  try {
-    const delivery = await deliveriesService.getDeliveryById(req.params.did);
+// Obtiene una entrega por su ID.
+// La búsqueda y validación de existencia corresponden al Service.
+export const getDeliveryById = async (req, res, next) => {
 
-    if (!delivery) {
-      return res.status(404).json({ error: 'Entrega no encontrada' });
-    }
+  try {
+
+    const delivery = await deliveriesService.getDeliveryById(
+      req.params.did
+    );
 
     res.json(delivery);
 
   } catch (error) {
-    res.status(500).send('Error del servidor');
+
+    next(error);
+
   }
+
 };
 
 
-export const createDelivery = async (req, res) => {
+// Crea una nueva entrega.
+// El Controller recibe los datos del body y los pasa al Service.
+export const createDelivery = async (req, res, next) => {
+
   try {
+
     const delivery = await deliveriesService.createDelivery(req.body);
 
     res.status(201).json(delivery);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Error del servidor');
+
+    next(error);
+
   }
+
 };
 
 
-export const updateDeliveryStatus = async (req, res) => {
+// Actualiza el estado de una entrega.
+// El Controller obtiene el ID desde la URL y el nuevo estado
+// desde el body, y delega la operación al Service.
+export const updateDeliveryStatus = async (req, res, next) => {
+
   try {
+
     const delivery = await deliveriesService.updateDeliveryStatus(
       req.params.did,
       req.body.status
     );
 
-    if (!delivery) {
-      return res.status(404).json({ error: 'Entrega no encontrada' });
-    }
-
     res.json(delivery);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Error del servidor');
+
+    next(error);
+
   }
+
 };
 
 
-export const deleteDelivery = async (req, res) => {
+// Elimina una entrega por ID.
+// El Service se encarga de verificar si existe y realizar
+// la eliminación mediante el Repository.
+export const deleteDelivery = async (req, res, next) => {
+
   try {
-    const delivery = await deliveriesService.deleteDelivery(req.params.did);
 
-    if (!delivery) {
-      return res.status(404).json({ error: 'Entrega no encontrada' });
-    }
+    await deliveriesService.deleteDelivery(req.params.did);
 
-    res.json({ message: 'Entrega eliminada' });
+    res.json({
+      message: 'Entrega eliminada'
+    });
 
   } catch (error) {
-    res.status(500).send('Error del servidor');
+
+    next(error);
+
   }
+
 };

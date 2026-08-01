@@ -16,20 +16,6 @@ export const createDelivery = async (deliveryData) => {
 };
 
 
-// Actualiza una entrega existente y devuelve el documento actualizado.
-export const updateDelivery = async (id, deliveryData) => {
-
-  return await Delivery.findByIdAndUpdate(
-    id,
-    deliveryData,
-    {
-      new: true
-    }
-  );
-
-};
-
-
 export const saveDelivery = async (delivery) => {
   return await delivery.save();
 };
