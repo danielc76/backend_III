@@ -1,35 +1,37 @@
 import {
-generateUsers,
-generateDrivers,
-generateOrders,
-generateDeliveries
+  generateUsers,
+  generateDrivers,
+  generateOrders,
+  generateDeliveries
 } from '../utils/mocks.generator.js';
 
 import {
-createUsers
+  createUsers
 } from '../repositories/user.repository.js';
 
 import {
-createOrders
+  createOrders
 } from '../repositories/order.repository.js';
 
 import {
-createDeliveries
+  createDeliveries
 } from '../repositories/delivery.repository.js';
 
 import {
-USER_ROLES
+  USER_ROLES
 } from '../constants/index.js';
 
 import { customError } from '../utils/customError.js';
 
 import { ERROR_CODES } from '../constants/error.constants.js';
 
+import { logger } from '../utils/logger.js';
+
 // Servicio encargado de coordinar la generación de datos simulados.
 // La creación puntual de cada entidad queda delegada en el generator.
 export const getMockUsers = (quantity = 10) => {
 
-return generateUsers(quantity);
+  return generateUsers(quantity);
 
 };
 
@@ -37,9 +39,9 @@ return generateUsers(quantity);
 // entre clientes y pedidos.
 export const getMockOrders = (quantity = 10) => {
 
-const users = generateUsers(quantity);
+  const users = generateUsers(quantity);
 
-return generateOrders(users, quantity);
+  return generateOrders(users, quantity);
 
 };
 
@@ -47,13 +49,13 @@ return generateOrders(users, quantity);
 // entre pedidos y repartidores.
 export const getMockDeliveries = (quantity = 10) => {
 
-const users = generateUsers(quantity);
+  const users = generateUsers(quantity);
 
-const drivers = generateDrivers(5);
+  const drivers = generateDrivers(5);
 
-const orders = generateOrders(users, quantity);
+  const orders = generateOrders(users, quantity);
 
-return generateDeliveries(orders, drivers);
+  return generateDeliveries(orders, drivers);
 
 };
 
@@ -62,96 +64,103 @@ return generateDeliveries(orders, drivers);
 // usuarios -> pedidos -> entregas.
 export const createMockData = async (quantity = 10) => {
 
-// Validamos que la cantidad recibida sea realmente un número.
-// Number.isInteger evita aceptar valores como texto o decimales.
-if (!Number.isInteger(quantity)) {
+  // Registramos el inicio de la operación para poder
+  // reconstruir posteriormente qué ocurrió.
+  logger.info(`Iniciando generación de datos mock: cantidad=${quantity}`);
 
-throw new customError(ERROR_CODES.INVALID_MOCK_AMOUNT);
+  // Validamos que la cantidad recibida sea realmente un número.
+  // Number.isInteger evita aceptar valores como texto o decimales.
+  if (!Number.isInteger(quantity)) {
 
-}
+    logger.warn(`Cantidad inválida para generación de mocks: ${quantity}`);
 
-// La cantidad debe ser mayor que cero.
-if (quantity <= 0) {
+    throw new customError(ERROR_CODES.INVALID_MOCK_AMOUNT);
 
-throw new customError(ERROR_CODES.INVALID_MOCK_AMOUNT);
+  }
 
-}
+  // La cantidad debe ser mayor que cero.
+  if (quantity <= 0) {
 
-// Evitamos generar una cantidad excesiva de registros.
-if (quantity > 100) {
+    logger.warn(`Cantidad inválida para generación de mocks: ${quantity}`);
 
-throw new customError(ERROR_CODES.INVALID_MOCK_AMOUNT);
+    throw new customError(ERROR_CODES.INVALID_MOCK_AMOUNT);
 
-}
+  }
 
-try {
+  // Evitamos generar una cantidad excesiva de registros.
+  if (quantity > 100) {
 
-// Genera clientes y repartidores en memoria.
-const usersData = generateUsers(quantity);
+    logger.warn(`Cantidad inválida para generación de mocks: ${quantity}`);
 
-const driversData = generateDrivers(
-  Math.min(5, quantity)
-);
+    throw new customError(ERROR_CODES.INVALID_MOCK_AMOUNT);
 
+  }
 
-// Guarda ambos tipos de usuarios en la colección User.
-const usersCreated = await createUsers([
-  ...usersData,
-  ...driversData
-]);
+  try {
 
+    // Genera clientes y repartidores en memoria.
+    const usersData = generateUsers(quantity);
 
-// Se separan los usuarios por rol para crear relaciones correctas.
-const customers = usersCreated.filter(
-  user => user.role === USER_ROLES.CUSTOMER
-);
+    const driversData = generateDrivers(
+      Math.min(5, quantity)
+    );
 
+    // Guarda ambos tipos de usuarios en la colección User.
+    const usersCreated = await createUsers([
+      ...usersData,
+      ...driversData
+    ]);
 
-const drivers = usersCreated.filter(
-  user => user.role === USER_ROLES.DRIVER
-);
+    // Se separan los usuarios por rol para crear relaciones correctas.
+    const customers = usersCreated.filter(
+      user => user.role === USER_ROLES.CUSTOMER
+    );
 
+    const drivers = usersCreated.filter(
+      user => user.role === USER_ROLES.DRIVER
+    );
 
-// Genera pedidos utilizando los clientes reales
-// creados previamente en MongoDB.
-const ordersData = generateOrders(
-  customers,
-  quantity
-);
+    // Genera pedidos utilizando los clientes reales
+    // creados previamente en MongoDB.
+    const ordersData = generateOrders(
+      customers,
+      quantity
+    );
 
+    const ordersCreated = await createOrders(
+      ordersData
+    );
 
-const ordersCreated = await createOrders(
-  ordersData
-);
+    // Genera entregas relacionadas con pedidos
+    // y repartidores reales.
+    const deliveriesData = generateDeliveries(
+      ordersCreated,
+      drivers
+    );
 
+    const deliveriesCreated = await createDeliveries(
+      deliveriesData
+    );
 
-// Genera entregas relacionadas con pedidos
-// y repartidores reales.
-const deliveriesData = generateDeliveries(
-  ordersCreated,
-  drivers
-);
+    // Registramos el resultado de la operación.
+    logger.info(
+      `Generación de datos mock completada: ${usersCreated.length} usuarios, ${ordersCreated.length} pedidos, ${deliveriesCreated.length} entregas`
+    );
 
+    return {
+      users: usersCreated,
+      orders: ordersCreated,
+      deliveries: deliveriesCreated
+    };
 
-const deliveriesCreated = await createDeliveries(
-  deliveriesData
-);
+  } catch (error) {
 
+    // Si ocurre una falla durante la generación o inserción
+    // en MongoDB, se transforma en un error del dominio.
+    throw new customError(
+      ERROR_CODES.MOCK_GENERATION_ERROR
+    );
 
-return {
-  users: usersCreated,
-  orders: ordersCreated,
-  deliveries: deliveriesCreated
-};
-
-} catch (error) {
-
-// Si ocurre una falla durante la generación o inserción
-// en MongoDB, se transforma en un error del dominio.
-throw new customError(
-  ERROR_CODES.MOCK_GENERATION_ERROR
-);
-
-}
+  }
 
 };

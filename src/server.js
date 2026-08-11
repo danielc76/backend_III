@@ -6,20 +6,22 @@ import app from './app.js';
 
 import { config } from './config/env.config.js';
 
+import { logger } from './utils/logger.js';
+
 
 mongoose.connect(config.mongoUri)
   .then(() => {
 
-    console.log('Conectado a MongoDB');
+    logger.info('Conectado a MongoDB');
 
     app.listen(config.port, () => {
-      console.log(`Servidor corriendo en puerto ${config.port}`);
+      logger.info(`Servidor corriendo en puerto ${config.port}`);
     });
 
   })
   .catch((error) => {
 
-    console.error('Error al conectar con MongoDB:', error.message);
+    logger.fatal(`Error al conectar con MongoDB: ${error.message}`);
 
     process.exit(1);
 

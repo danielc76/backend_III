@@ -19,6 +19,9 @@ import {
   DELIVERY_PRIORITY
 } from '../constants/index.js';
 
+// Logger centralizado para registrar eventos importantes.
+import { logger } from '../utils/logger.js';
+
 // Obtiene todos los pedidos.
 // El Service delega la consulta al Repository.
 export const getOrders = async () => {
@@ -111,12 +114,17 @@ export const createOrder = async (orderData) => {
 
   });
 
+  // Registramos que el pedido fue creado correctamente.
+  logger.info(
+    `Pedido ${newOrder._id} creado correctamente. Total: $${total}`
+  );
+
   // Simulación del envío de un email de confirmación.
-  console.log(
+  logger.info(
     `[EMAIL SIMULADO] Enviando confirmacion al usuario ${customer}...`
   );
 
-  console.log(
+  logger.info(
     `[EMAIL SIMULADO] Tu pedido ${newOrder._id} fue creado. Total: $${total}`
   );
 
@@ -182,7 +190,8 @@ export const updateOrderStatus = async (id, status) => {
   // Guardamos los cambios en MongoDB.
   await ordersRepository.saveOrder(order);
 
-  console.log(
+  // Registramos el cambio de estado del pedido.
+  logger.info(
     `Pedido ${order._id} actualizado a estado: ${status}`
   );
 

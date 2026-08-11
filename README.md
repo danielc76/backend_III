@@ -240,6 +240,158 @@ Esto evita repetir códigos y mensajes en diferentes partes del proyecto.
 
 ---
 
+# Logging y monitoreo básico
+
+El proyecto utiliza **Winston** como sistema de logging centralizado.
+
+Los logs permiten mantener una **historia técnica de lo que hizo la aplicación**, registrando eventos importantes como el inicio del servidor, la conexión con MongoDB, las peticiones HTTP, la generación de datos de prueba, la creación de pedidos y los errores.
+
+La idea no es registrar absolutamente todo, sino aquellos eventos que permitan entender qué ocurrió antes, durante y después de un problema.
+
+## Niveles de log
+
+ShipNow utiliza los siguientes niveles:
+
+* `debug` → información detallada útil principalmente durante el desarrollo.
+* `http` → registra las peticiones HTTP recibidas, incluyendo método, ruta, código de respuesta y tiempo de ejecución.
+* `info` → registra operaciones normales e importantes de la aplicación.
+* `warn` → registra situaciones que requieren atención, como validaciones de negocio o cantidad inválida de mocks.
+* `error` → registra errores inesperados de la aplicación.
+* `fatal` → registra fallas críticas, como problemas graves durante la conexión inicial con MongoDB.
+
+En desarrollo se permiten logs desde `debug`.
+
+En producción el nivel se restringe a partir de `info`, reduciendo la cantidad de información registrada.
+
+## Request Logger
+
+Se incorporó un middleware de logging de peticiones HTTP.
+
+Por cada request se registra:
+
+* Método HTTP.
+* URL solicitada.
+* Código de respuesta.
+* Tiempo de ejecución.
+
+Por ejemplo:
+
+```text
+2026-08-11T02:02:40.497Z [http] GET /api/users 200 73ms
+```
+
+Esto permite conocer qué peticiones recibió la API y cómo fueron procesadas.
+
+## Integración con el manejo de errores
+
+El logger está integrado con el middleware global de errores.
+
+Los errores conocidos del dominio se registran como `warn`, mientras que los errores inesperados se registran como `error`.
+
+Por ejemplo:
+
+```text
+[warn] POST /api/users - VALIDATION_ERROR: Faltan datos obligatorios
+```
+
+La respuesta enviada al cliente continúa utilizando el sistema centralizado de `ERROR_CODES` y `ERROR_DICTIONARY`.
+
+De esta manera, el logging **no reemplaza el manejo de errores**, sino que lo complementa.
+
+## Eventos importantes registrados
+
+Actualmente se registran eventos relevantes como:
+
+* Inicio del servidor.
+* Conexión exitosa con MongoDB.
+* Error durante la conexión con MongoDB.
+* Peticiones HTTP.
+* Generación de datos mock.
+* Cantidad inválida para generación de mocks.
+* Finalización de generación de datos mock.
+* Creación de pedidos.
+* Actualización del estado de pedidos.
+* Errores de negocio.
+* Errores inesperados.
+* Peticiones sospechosas desde una misma IP.
+
+Esto permite reconstruir qué ocurrió en la aplicación cuando se presenta un problema.
+
+## Persistencia y rotación de logs
+
+Además de mostrarse por consola, los errores importantes se persisten en archivos dentro de:
+
+```text
+logs/
+```
+
+Los archivos son generados mediante `winston-daily-rotate-file`.
+
+La configuración actual permite:
+
+* Rotar los archivos por fecha.
+* Limitar el tamaño máximo de cada archivo.
+* Mantener los registros durante un período determinado.
+* Evitar que los archivos de logs crezcan indefinidamente.
+
+Los archivos generados por la aplicación no forman parte del repositorio.
+
+La carpeta `logs/` está incluida en `.gitignore`:
+
+```gitignore
+logs/
+```
+
+## Endpoint de prueba del logger
+
+Se incorporó un endpoint interno para verificar rápidamente que los diferentes niveles de logging funcionan correctamente.
+
+### Endpoint
+
+```text
+GET /api/logger
+```
+
+Al ejecutarlo genera registros de prueba para:
+
+```text
+debug
+http
+info
+warn
+error
+fatal
+```
+
+Por ejemplo:
+
+```text
+[debug] Prueba de nivel DEBUG
+[http] Prueba de nivel HTTP
+[info] Prueba de nivel INFO
+[warn] Prueba de nivel WARN
+[error] Prueba de nivel ERROR
+[fatal] Prueba de nivel FATAL
+```
+
+Los niveles pueden observarse en la consola y los niveles persistidos correspondientes pueden verificarse en la carpeta `logs/`.
+
+Este endpoint existe únicamente como herramienta interna para comprobar la configuración del sistema de logging y no representa una funcionalidad del negocio.
+
+## Rate Limit y monitoreo básico
+
+También se incorporó un middleware de control básico de peticiones.
+
+El middleware mantiene un contador temporal por dirección IP y registra una advertencia cuando detecta una cantidad elevada de solicitudes dentro de un período determinado.
+
+Por ejemplo:
+
+```text
+[warn] Peticiones sospechosas desde la ip ::1
+```
+
+El objetivo de esta implementación es aportar una primera señal de monitoreo ante comportamientos potencialmente anómalos.
+
 # Constantes del dominio
 
 También se utilizan constantes para evitar repetir strings directamente en el código.
