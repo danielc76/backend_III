@@ -3,6 +3,7 @@ import * as usersRepository from '../repositories/user.repository.js';
 import { customError } from '../utils/customError.js';
 import { ERROR_CODES } from '../constants/error.constants.js';
 import { USER_ROLES } from '../constants/index.js';
+import { logger } from '../utils/logger.js';
 
 
 // Obtiene todos los usuarios a través del Repository.
@@ -20,6 +21,8 @@ export const getUserById = async (id) => {
   const user = await usersRepository.getUserById(id);
 
   if (!user) {
+
+    logger.warn(`Usuario no encontrado: ${id}`);
 
     throw new customError(ERROR_CODES.USER_NOT_FOUND);
 
@@ -45,14 +48,18 @@ export const createUser = async (userData) => {
   // Verifica que estén presentes los datos obligatorios.
   if (!firstName || !lastName || !email || !password) {
 
+    logger.warn('Intento de crear usuario con datos obligatorios faltantes');
+
     throw new customError(ERROR_CODES.VALIDATION_ERROR);
 
   }
 
 
-  // Los administradores se creen por fuera del flujo público de registro.
+  // Los administradores se crean por fuera del flujo público de registro.
   // No se permite crear usuarios con rol administrador.
   if (role === USER_ROLES.ADMIN) {
+
+    logger.warn(`Intento de crear usuario con rol ADMIN: ${email}`);
 
     throw new customError(ERROR_CODES.FORBIDDEN);
 
@@ -63,6 +70,8 @@ export const createUser = async (userData) => {
   const existingUser = await usersRepository.getUserByEmail(email);
 
   if (existingUser) {
+
+    logger.warn(`Intento de registrar email ya existente: ${email}`);
 
     throw new customError(ERROR_CODES.USER_ALREADY_EXIST);
 
@@ -81,6 +90,8 @@ export const createUser = async (userData) => {
   });
 
 
+  logger.info(`Usuario creado correctamente: ${email}`);
+
   return newUser;
 
 };
@@ -94,9 +105,14 @@ export const deleteUser = async (id) => {
 
   if (!user) {
 
+    logger.warn(`Intento de eliminar usuario inexistente: ${id}`);
+
     throw new customError(ERROR_CODES.USER_NOT_FOUND);
 
   }
+
+
+  logger.info(`Usuario eliminado correctamente: ${id}`);
 
   return user;
 

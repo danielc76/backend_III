@@ -4,5 +4,6 @@ node_modules/
 # Variables de entorno
 .env
 
-# Logs generados por la aplicación
-logs/
+# Archivos de logs generados por la aplicación
+logs/*.log
+logs/*.json
