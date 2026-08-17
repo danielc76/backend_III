@@ -1,0 +1,91 @@
+components:
+  schemas:
+
+    OrderItem:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre del item incluido en el pedido
+          example: Producto de prueba
+
+        quantity:
+          type: integer
+          minimum: 1
+          description: Cantidad solicitada del item
+          example: 2
+
+        price:
+          type: number
+          minimum: 0
+          description: Precio unitario del item
+          example: 1500
+
+
+    Order:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: ID único del pedido generado por MongoDB
+          example: 6a7a8354557c126a847f972d
+
+        customer:
+          type: string
+          description: ID del usuario que realizó el pedido
+          example: 6a58f65e8b70e78947f240c8
+
+        items:
+          type: array
+          description: Items incluidos en el pedido
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+        deliveryAddress:
+          type: string
+          description: Dirección donde debe entregarse el pedido
+          example: Av. Corrientes 1234, CABA
+
+        total:
+          type: number
+          description: Importe total calculado del pedido
+          example: 3000
+
+        status:
+          type: string
+          description: Estado actual del pedido
+          enum:
+            - created
+            - assigned
+            - picked_up
+            - in_transit
+            - delivered
+            - cancelled
+          default: created
+          example: created
+
+        priority:
+          type: string
+          description: Prioridad asignada al pedido
+          enum:
+            - low
+            - normal
+            - high
+          default: normal
+          example: normal
+
+        delivery:
+          type: string
+          nullable: true
+          description: ID de la entrega asociada al pedido
+          example: null
+
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación del pedido
+
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización del pedido

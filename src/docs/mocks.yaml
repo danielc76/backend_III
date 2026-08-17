@@ -1,0 +1,175 @@
+paths:
+
+  /api/mocks/users:
+    get:
+      summary: Obtener usuarios mock
+      description: Genera usuarios simulados utilizando Faker sin persistirlos en MongoDB.
+      tags:
+        - Mocks
+
+      responses:
+        "200":
+          description: Usuarios mock generados correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+  /api/mocks/orders:
+    get:
+      summary: Obtener pedidos mock
+      description: Genera pedidos simulados relacionados con usuarios mock sin persistirlos en MongoDB.
+      tags:
+        - Mocks
+
+      responses:
+        "200":
+          description: Pedidos mock generados correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+  /api/mocks/deliveries:
+    get:
+      summary: Obtener entregas mock
+      description: Genera entregas simuladas relacionadas con pedidos y repartidores mock sin persistirlas en MongoDB.
+      tags:
+        - Mocks
+
+      responses:
+        "200":
+          description: Entregas mock generadas correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Delivery'
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+  /api/mocks/generate:
+    post:
+      summary: Generar y guardar datos de prueba
+      description: Genera usuarios, repartidores, pedidos y entregas simuladas y los persiste en MongoDB.
+      tags:
+        - Mocks
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - quantity
+
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  description: Cantidad de registros principales a generar
+                  example: 3
+
+      responses:
+        "201":
+          description: Datos de prueba generados correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Datos de prueba generados correctamente
+
+                  result:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+
+                      orders:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Order'
+
+                      deliveries:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Delivery'
+
+        "400":
+          description: Cantidad inválida para la generación de datos mock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INVALID_MOCK_AMOUNT
+                message: La cantidad de registros a generar debe ser un número positivo
+
+        "500":
+          description: Error durante la generación de datos de prueba
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                generationError:
+                  summary: Error durante la generación
+                  value:
+                    status: error
+                    error: MOCK_GENERATION_ERROR
+                    message: No se pudieron generar los datos de prueba
+
+                internalError:
+                  summary: Error interno inesperado
+                  value:
+                    status: error
+                    error: INTERNAL_SERVER_ERROR
+                    message: Error interno del servidor

@@ -1,0 +1,223 @@
+paths:
+
+  /api/users:
+    get:
+      summary: Obtener todos los usuarios
+      description: Devuelve la lista completa de usuarios registrados en ShipNow.
+      tags:
+        - Users
+
+      responses:
+        "200":
+          description: Lista de usuarios obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+    post:
+      summary: Crear un usuario
+      description: Crea un nuevo usuario en ShipNow.
+      tags:
+        - Users
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - firstName
+                - lastName
+                - email
+                - password
+
+              properties:
+                firstName:
+                  type: string
+                  example: Juan
+
+                lastName:
+                  type: string
+                  example: Perez
+
+                email:
+                  type: string
+                  format: email
+                  example: juan@test.com
+
+                password:
+                  type: string
+                  example: "123456"
+
+                role:
+                  type: string
+                  enum:
+                    - customer
+                    - driver
+                    - user
+                    - store
+                  default: customer
+                  example: customer
+
+      responses:
+        "201":
+          description: Usuario creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+        "400":
+          description: Faltan datos obligatorios o el usuario ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  summary: Faltan datos obligatorios
+                  value:
+                    status: error
+                    error: VALIDATION_ERROR
+                    message: Faltan datos obligatorios
+
+                userAlreadyExist:
+                  summary: El usuario ya existe
+                  value:
+                    status: error
+                    error: USER_ALREADY_EXIST
+                    message: El usuario ya existe
+
+        "403":
+          description: No se permite crear un usuario con rol administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: FORBIDDEN
+                message: Acción no permitida
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+  /api/users/{uid}:
+    get:
+      summary: Obtener un usuario por ID
+      description: Busca un usuario utilizando su identificador único.
+      tags:
+        - Users
+
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+          example: 6a58f65e8b70e78947f240c8
+
+      responses:
+        "200":
+          description: Usuario obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: USER_NOT_FOUND
+                message: Usuario no encontrado
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+    delete:
+      summary: Eliminar un usuario
+      description: Elimina un usuario utilizando su identificador único.
+      tags:
+        - Users
+
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+          example: 6a58f65e8b70e78947f240c8
+
+      responses:
+        "200":
+          description: Usuario eliminado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                message: Usuario eliminado
+
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: USER_NOT_FOUND
+                message: Usuario no encontrado
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor

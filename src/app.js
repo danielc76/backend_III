@@ -2,6 +2,7 @@
 
 import express from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 
 import usersRouter from './routes/users.routes.js';
 import ordersRouter from './routes/orders.routes.js';
@@ -12,6 +13,8 @@ import loggerRouter from './routes/logger.routes.js';
 import { reqLogger } from './middleware/requestLogger.js';
 import { rateLimitMiddleware } from './middleware/rateLimitMiddleware.js';
 import { errorHandler } from './middleware/errorHandler.js';
+
+import { swaggerSpec } from './docs/swagger.config.js';
 
 const app = express();
 
@@ -32,6 +35,10 @@ app.use(reqLogger);
 // Registra advertencias cuando detecta muchas
 // peticiones desde una misma IP.
 app.use(rateLimitMiddleware);
+
+
+// Documentación interactiva de la API.
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 // Rutas de la API.

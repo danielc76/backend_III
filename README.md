@@ -41,6 +41,81 @@ npm run dev
 
 El proyecto utiliza variables de entorno para la configuración. El archivo `.env` no debe subirse al repositorio.
 
+Una vez iniciado el servidor:
+
+* API: `http://localhost:8080`
+* Swagger UI: `http://localhost:8080/api/docs`
+
+---
+
+# Documentación de la API con Swagger
+
+ShipNow utiliza **Swagger / OpenAPI** para documentar y probar de forma interactiva los endpoints de la API.
+
+Con el servidor en ejecución, la documentación está disponible en:
+
+http://localhost:8080/api/docs
+
+Desde Swagger UI se pueden consultar las rutas disponibles, visualizar los parámetros y cuerpos esperados, revisar las posibles respuestas y ejecutar peticiones directamente contra la API mediante **Try it out**.
+
+## Módulos documentados
+
+La documentación está organizada por los principales módulos de ShipNow:
+
+* **Users** → gestión de usuarios.
+* **Orders** → gestión de pedidos.
+* **Deliveries** → gestión de entregas.
+* **Mocks** → generación de datos simulados y carga de datos de prueba.
+* **Logger** → endpoint interno para validar los niveles del sistema de logging.
+
+## Schemas reutilizables
+
+La documentación utiliza schemas de OpenAPI para representar las principales estructuras utilizadas por la API:
+
+* `User`
+* `Order`
+* `OrderItem`
+* `Delivery`
+* `ErrorResponse`
+* `SuccessResponse`
+
+Estos schemas permiten reutilizar las mismas definiciones en diferentes endpoints y mantener la documentación consistente.
+
+## Respuestas de error
+
+Swagger también documenta las respuestas de error manejadas por la API, entre ellas:
+
+* Datos obligatorios faltantes.
+* Usuario, pedido o entrega inexistente.
+* Operaciones no permitidas.
+* Estados de pedidos o entregas inválidos.
+* Cantidades inválidas para la generación de mocks.
+* Errores internos del servidor.
+
+Las respuestas utilizan el manejo centralizado de errores implementado en ShipNow.
+
+Ejemplo:
+
+{
+  "status": "error",
+  "error": "USER_NOT_FOUND",
+  "message": "Usuario no encontrado"
+}
+
+## Cómo probar la API desde Swagger
+
+1. Ejecutar el proyecto con `npm run dev`.
+2. Abrir `http://localhost:8080/api/docs`.
+3. Seleccionar uno de los endpoints.
+4. Presionar **Try it out**.
+5. Completar los parámetros o el body cuando corresponda.
+6. Presionar **Execute**.
+7. Revisar el código HTTP y la respuesta obtenida.
+
+Los endpoints de creación, modificación y eliminación realizan operaciones reales sobre la base de datos configurada para el proyecto.
+
+El endpoint del módulo **Logger** se utiliza únicamente como herramienta de validación del sistema de logging y no representa una funcionalidad de negocio.
+
 ---
 
 # Arquitectura por capas

@@ -1,0 +1,64 @@
+components:
+  schemas:
+
+    Delivery:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: ID único de la entrega generado por MongoDB
+          example: 6a6e06be74704666098e9f91
+
+        order:
+          type: string
+          description: ID del pedido asociado a la entrega
+          example: 6a7a8354557c126a847f972d
+
+        driver:
+          type: string
+          nullable: true
+          description: ID del repartidor asignado a la entrega
+          example: bdf8d4fe3a2c6a12bfdce27c
+
+        status:
+          type: string
+          description: Estado actual de la entrega
+          enum:
+            - pending
+            - assigned
+            - in_transit
+            - delivered
+          default: pending
+          example: assigned
+
+        priority:
+          type: string
+          description: Prioridad de la entrega
+          enum:
+            - low
+            - normal
+            - high
+          default: normal
+          example: normal
+
+        assignedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Fecha y hora en que se asignó la entrega
+
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Fecha y hora en que se completó la entrega
+
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación de la entrega
+
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización de la entrega

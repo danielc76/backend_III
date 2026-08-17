@@ -1,0 +1,324 @@
+paths:
+
+  /api/orders:
+    get:
+      summary: Obtener todos los pedidos
+      description: Devuelve la lista completa de pedidos registrados en ShipNow.
+      tags:
+        - Orders
+
+      responses:
+        "200":
+          description: Lista de pedidos obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+    post:
+      summary: Crear un pedido
+      description: Crea un nuevo pedido asociado a un cliente existente.
+      tags:
+        - Orders
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - customer
+                - items
+                - deliveryAddress
+
+              properties:
+                customer:
+                  type: string
+                  description: ID del cliente que realiza el pedido
+                  example: 6a58f65e8b70e78947f240c8
+
+                items:
+                  type: array
+                  description: Lista de items incluidos en el pedido
+                  minItems: 1
+                  items:
+                    $ref: '#/components/schemas/OrderItem'
+
+                deliveryAddress:
+                  type: string
+                  description: Dirección donde debe entregarse el pedido
+                  example: Av. Corrientes 1234, CABA
+
+                priority:
+                  type: string
+                  description: Prioridad del pedido
+                  enum:
+                    - low
+                    - normal
+                    - high
+                  default: normal
+                  example: normal
+
+      responses:
+        "201":
+          description: Pedido creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+                  shippingCost:
+                    type: number
+                    description: Costo de envío calculado
+                    example: 20
+                  message:
+                    type: string
+                    example: Pedido creado y email enviado
+
+        "400":
+          description: Datos obligatorios faltantes o inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: VALIDATION_ERROR
+                message: Faltan datos obligatorios
+
+        "403":
+          description: El usuario no tiene permitido crear pedidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: FORBIDDEN
+                message: Acción no permitida
+
+        "404":
+          description: El cliente indicado no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: USER_NOT_FOUND
+                message: Usuario no encontrado
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+  /api/orders/{oid}:
+    get:
+      summary: Obtener un pedido por ID
+      description: Busca un pedido utilizando su identificador único.
+      tags:
+        - Orders
+
+      parameters:
+        - name: oid
+          in: path
+          required: true
+          description: ID del pedido
+          schema:
+            type: string
+          example: 6a7a8354557c126a847f972d
+
+      responses:
+        "200":
+          description: Pedido obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+        "404":
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: ORDER_NOT_FOUND
+                message: No se encontró el pedido solicitado
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+    delete:
+      summary: Eliminar un pedido
+      description: Elimina un pedido utilizando su identificador único.
+      tags:
+        - Orders
+
+      parameters:
+        - name: oid
+          in: path
+          required: true
+          description: ID del pedido
+          schema:
+            type: string
+          example: 6a7a8354557c126a847f972d
+
+      responses:
+        "200":
+          description: Pedido eliminado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                message: Pedido eliminado
+
+        "404":
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: ORDER_NOT_FOUND
+                message: No se encontró el pedido solicitado
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+
+  /api/orders/{oid}/status:
+    patch:
+      summary: Actualizar el estado de un pedido
+      description: Modifica el estado de un pedido existente.
+      tags:
+        - Orders
+
+      parameters:
+        - name: oid
+          in: path
+          required: true
+          description: ID del pedido
+          schema:
+            type: string
+          example: 6a7a8354557c126a847f972d
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - status
+
+              properties:
+                status:
+                  type: string
+                  description: Nuevo estado del pedido
+                  enum:
+                    - created
+                    - assigned
+                    - picked_up
+                    - in_transit
+                    - delivered
+                    - cancelled
+                  example: in_transit
+
+      responses:
+        "200":
+          description: Estado del pedido actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+        "400":
+          description: Estado faltante, inválido o pedido ya entregado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  summary: Estado no informado
+                  value:
+                    status: error
+                    error: VALIDATION_ERROR
+                    message: Faltan datos obligatorios
+
+                invalidStatus:
+                  summary: Estado de pedido inválido
+                  value:
+                    status: error
+                    error: INVALID_ORDER_STATUS
+                    message: El estado indicado no es válido
+
+        "404":
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: ORDER_NOT_FOUND
+                message: No se encontró el pedido solicitado
+
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor

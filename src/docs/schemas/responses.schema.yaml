@@ -1,0 +1,28 @@
+components:
+  schemas:
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+
+        error:
+          type: string
+          description: Código interno del error
+          example: USER_NOT_FOUND
+
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: Usuario no encontrado
+
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensaje de confirmación de la operación
+          example: Operación realizada correctamente

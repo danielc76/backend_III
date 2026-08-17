@@ -9,6 +9,8 @@ import { config } from './config/env.config.js';
 import { logger } from './utils/logger.js';
 
 
+logger.info('Conectando con MongoDB...');
+
 mongoose.connect(config.mongoUri)
   .then(() => {
 
@@ -16,6 +18,9 @@ mongoose.connect(config.mongoUri)
 
     app.listen(config.port, () => {
       logger.info(`Servidor corriendo en puerto ${config.port}`);
+      logger.info(
+        `Documentación Swagger disponible en http://localhost:${config.port}/api/docs`
+      );
     });
 
   })
