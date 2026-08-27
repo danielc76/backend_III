@@ -675,7 +675,114 @@ insertMany()
 
 ---
 
-# Pruebas realizadas
+# Testing funcional automatizado
+
+ShipNow incluye una suite de tests funcionales desarrollada con:
+
+* **Mocha** → organiza y ejecuta los casos de prueba.
+* **Chai** → comprueba estados HTTP, estructuras y valores.
+* **Supertest** → realiza peticiones sobre la aplicación Express sin iniciar un servidor ni abrir un puerto.
+
+Los tests importan directamente `app` desde `src/app.js`. La conexión con MongoDB y el inicio del servidor permanecen separados en `src/server.js`.
+
+## Entorno de testing
+
+La suite utiliza un entorno separado del desarrollo:
+
+```text
+NODE_ENV=test
+PORT=8081
+MONGODB_URI=mongodb+srv://USUARIO:CONTRASENA@CLUSTER/shipnow_test
+```
+
+El archivo `.env.test` contiene la configuración real y no debe subirse al repositorio.
+
+El archivo `.env.test.example` documenta las variables necesarias sin incluir credenciales.
+
+La base debe llamarse obligatoriamente `shipnow_test`. Antes de conectarse, `tests/setup.js` verifica el entorno y el nombre de la base para evitar que la limpieza se ejecute sobre datos de desarrollo.
+
+## Preparación
+
+1. Instalar las dependencias:
+
+```bash
+npm install
+```
+
+2. Crear `.env.test` a partir del archivo de ejemplo.
+
+3. Completar `MONGODB_URI` con una conexión de Atlas que apunte a `shipnow_test`.
+
+## Ejecución
+
+Para ejecutar la suite completa:
+
+```bash
+npm test
+```
+
+No es necesario ejecutar `npm run dev` ni iniciar el servidor manualmente.
+
+## Organización
+
+```text
+tests/
+├── setup.js
+├── deliveries.test.js
+├── logger.test.js
+├── mocks.test.js
+├── notFound.test.js
+├── orders.test.js
+├── swagger.test.js
+└── users.test.js
+```
+
+`tests/setup.js` se encarga de:
+
+* cargar `.env.test`;
+* validar el entorno y la base;
+* conectar Mongoose;
+* limpiar Users, Orders y Deliveries antes de cada test;
+* limpiar los datos y desconectar MongoDB al finalizar.
+
+## Módulos cubiertos
+
+La suite incluye 25 tests funcionales para:
+
+* Users.
+* Orders.
+* Deliveries.
+* Mocks.
+* Logger.
+* Swagger.
+* Rutas inexistentes.
+
+Se comprueban casos exitosos y errores esperados, incluyendo:
+
+* listados;
+* creación y consulta de pedidos;
+* cálculos de total y costo de envío;
+* actualización de estados;
+* sincronización entre pedidos y entregas;
+* generación de datos mock en memoria;
+* persistencia controlada de mocks;
+* datos obligatorios faltantes;
+* recursos inexistentes;
+* roles no permitidos;
+* estados y cantidades inválidas;
+* formato uniforme de los errores.
+
+Cada test valida el status HTTP, la estructura del body y los valores importantes de la respuesta.
+
+## Datos controlados y limpieza
+
+Los tests crean sus propios usuarios, pedidos y entregas. No dependen de información cargada manualmente ni del orden de ejecución.
+
+Antes de cada caso se eliminan los datos generados por el caso anterior. Al finalizar la suite se realiza una última limpieza y se cierra la conexión con MongoDB.
+
+---
+
+# Pruebas manuales realizadas
 
 Se realizaron pruebas manuales utilizando **Postman**, verificando tanto casos exitosos como errores.
 
@@ -731,7 +838,7 @@ Se comprobó:
 * Eliminación.
 * Verificación posterior de la eliminación.
 
-Las pruebas realizadas fueron manuales mediante Postman. Los tests automatizados podrían incorporarse como mejora futura.
+Estas comprobaciones manuales se complementan con la suite de tests funcionales automatizados incluida en el proyecto.
 
 ---
 
@@ -785,5 +892,4 @@ La idea fundamental para estudiar es:
 "¿Dónde se almacenan los datos?"
 
 ---
-
 

@@ -3,6 +3,7 @@ node_modules/
 
 # Variables de entorno
 .env
+.env.test
 
 # Archivos de logs generados por la aplicación
 logs/*.log

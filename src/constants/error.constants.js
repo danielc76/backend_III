@@ -20,6 +20,7 @@ export const ERROR_CODES = {
 
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   FORBIDDEN: 'FORBIDDEN',
+  ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
 
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR'
 
@@ -86,6 +87,11 @@ export const ERROR_DICTIONARY = {
   [ERROR_CODES.FORBIDDEN]: {
     statusCode: 403,
     message: 'Acción no permitida'
+  },
+
+  [ERROR_CODES.ROUTE_NOT_FOUND]: {
+    statusCode: 404,
+    message: 'Ruta no encontrada'
   },
 
   [ERROR_CODES.INTERNAL_SERVER_ERROR]: {

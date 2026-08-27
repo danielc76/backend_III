@@ -15,6 +15,8 @@ import { rateLimitMiddleware } from './middleware/rateLimitMiddleware.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 import { swaggerSpec } from './docs/swagger.config.js';
+import { customError } from './utils/customError.js';
+import { ERROR_CODES } from './constants/error.constants.js';
 
 const app = express();
 
@@ -47,6 +49,15 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/deliveries', deliveriesRouter);
 app.use('/api/mocks', mocksRouter);
 app.use('/api/logger', loggerRouter);
+
+
+// Si ninguna ruta pudo resolver la petición,
+// generamos un error con el formato definido por la API.
+app.use((req, res, next) => {
+
+  next(new customError(ERROR_CODES.ROUTE_NOT_FOUND));
+
+});
 
 
 // Middleware global para centralizar el manejo de errores.
