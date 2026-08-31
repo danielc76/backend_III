@@ -747,7 +747,7 @@ tests/
 
 ## Módulos cubiertos
 
-La suite incluye 25 tests funcionales para:
+La suite incluye 33 tests funcionales para:
 
 * Users.
 * Orders.
@@ -760,6 +760,7 @@ La suite incluye 25 tests funcionales para:
 Se comprueban casos exitosos y errores esperados, incluyendo:
 
 * listados;
+* creación, consulta y eliminación de usuarios;
 * creación y consulta de pedidos;
 * cálculos de total y costo de envío;
 * actualización de estados;
@@ -892,4 +893,3 @@ La idea fundamental para estudiar es:
 "¿Dónde se almacenan los datos?"
 
 ---
-
