@@ -53,6 +53,12 @@ components:
           nullable: true
           description: Fecha y hora en que se completó la entrega
 
+        proofs:
+          type: array
+          description: Comprobantes asociados a la entrega
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+
         createdAt:
           type: string
           format: date-time

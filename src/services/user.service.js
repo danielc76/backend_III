@@ -2,7 +2,8 @@ import * as usersRepository from '../repositories/user.repository.js';
 
 import { customError } from '../utils/customError.js';
 import { ERROR_CODES } from '../constants/error.constants.js';
-import { USER_ROLES } from '../constants/index.js';
+import { DOCUMENT_TYPES, USER_ROLES } from '../constants/index.js';
+import { buildFileMetadata } from '../utils/file.utils.js';
 import { logger } from '../utils/logger.js';
 
 
@@ -93,6 +94,59 @@ export const createUser = async (userData) => {
   logger.info(`Usuario creado correctamente: ${email}`);
 
   return newUser;
+
+};
+
+
+// Asocia los metadatos de un documento al usuario correspondiente.
+export const addUserDocument = async (id, documentType, file) => {
+
+  if (!file) {
+    throw new customError(ERROR_CODES.FILE_REQUIRED);
+  }
+
+  const validDocumentTypes = [
+    DOCUMENT_TYPES.USER_DOCUMENT,
+    DOCUMENT_TYPES.DRIVER_LICENSE
+  ];
+
+  if (!validDocumentTypes.includes(documentType)) {
+
+    logger.warn(`Tipo de documento inválido: ${documentType}`);
+
+    throw new customError(ERROR_CODES.INVALID_DOCUMENT_TYPE);
+
+  }
+
+  const documentData = buildFileMetadata(file, documentType);
+
+  let user;
+
+  try {
+
+    user = await usersRepository.addUserDocument(id, documentData);
+
+  } catch (error) {
+
+    logger.error(`Error al asociar un documento al usuario ${id}`);
+
+    throw new customError(ERROR_CODES.UPLOAD_ERROR);
+
+  }
+
+  if (!user) {
+
+    logger.warn(`Usuario no encontrado al cargar un documento: ${id}`);
+
+    throw new customError(ERROR_CODES.USER_NOT_FOUND);
+
+  }
+
+  logger.info(
+    `Documento ${file.filename} cargado para el usuario ${id}`
+  );
+
+  return user;
 
 };
 

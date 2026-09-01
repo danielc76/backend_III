@@ -1,6 +1,7 @@
 // Importamos el Service porque el Controller se encarga de
 // recibir la petición y delegar la lógica de negocio.
 import * as usersService from '../services/user.service.js';
+import { removeUploadedFile } from '../utils/file.utils.js';
 
 
 // Obtiene todos los usuarios.
@@ -60,6 +61,34 @@ export const createUser = async (req, res, next) => {
 
     // Los errores de validación, usuario existente,
     // permisos, etc. pasan al middleware global.
+    next(error);
+
+  }
+
+};
+
+
+// Recibe un documento y lo asocia al usuario indicado en la URL.
+export const uploadUserDocument = async (req, res, next) => {
+
+  try {
+
+    const user = await usersService.addUserDocument(
+      req.params.uid,
+      req.body.documentType,
+      req.file
+    );
+
+    res.status(201).json({
+      message: 'Documento cargado correctamente',
+      user
+    });
+
+  } catch (error) {
+
+    // Si la asociación falla, evitamos dejar el archivo aislado.
+    await removeUploadedFile(req.file);
+
     next(error);
 
   }

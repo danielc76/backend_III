@@ -1,0 +1,51 @@
+components:
+  schemas:
+    FileMetadata:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: ID del registro de metadatos
+
+        originalName:
+          type: string
+          description: Nombre original del archivo
+          example: documento.pdf
+
+        generatedName:
+          type: string
+          description: Nombre único generado por el servidor
+          example: 1788200000000-550e8400-e29b-41d4-a716-446655440000.pdf
+
+        path:
+          type: string
+          description: Ruta del archivo dentro del servidor
+          example: uploads/users/documents/1788200000000-documento.pdf
+
+        mimeType:
+          type: string
+          description: Tipo de contenido del archivo
+          enum:
+            - application/pdf
+            - image/jpeg
+            - image/png
+          example: application/pdf
+
+        size:
+          type: integer
+          description: Tamaño del archivo expresado en bytes
+          example: 24576
+
+        documentType:
+          type: string
+          description: Tipo de documento asociado
+          enum:
+            - user_document
+            - driver_license
+            - delivery_proof
+          example: user_document
+
+        uploadedAt:
+          type: string
+          format: date-time
+          description: Fecha y hora de carga

@@ -31,3 +31,12 @@ export const DELIVERY_PRIORITY = Object.freeze({
   HIGH: 'high'
 });
 
+
+export {
+  ALLOWED_FILE_TYPES,
+  DOCUMENT_TYPES,
+  MAX_FILE_SIZE,
+  UPLOAD_DIRECTORIES,
+  UPLOAD_FIELDS
+} from './file.constants.js';
+

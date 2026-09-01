@@ -21,6 +21,17 @@ export const saveDelivery = async (delivery) => {
 };
 
 
+export const addDeliveryProof = async (id, proofData) => {
+
+  return await Delivery.findByIdAndUpdate(
+    id,
+    { $push: { proofs: proofData } },
+    { new: true, runValidators: true }
+  );
+
+};
+
+
 export const deleteDelivery = async (id) => {
   return await Delivery.findByIdAndDelete(id);
 };

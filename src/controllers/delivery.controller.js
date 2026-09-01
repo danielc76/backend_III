@@ -1,6 +1,7 @@
 // Importamos el Service porque el Controller se encarga de
 // recibir la petición HTTP y delegar la lógica de negocio.
 import * as deliveriesService from '../services/delivery.service.js';
+import { removeUploadedFile } from '../utils/file.utils.js';
 
 
 // Obtiene todas las entregas.
@@ -77,6 +78,33 @@ export const updateDeliveryStatus = async (req, res, next) => {
     res.json(delivery);
 
   } catch (error) {
+
+    next(error);
+
+  }
+
+};
+
+
+// Recibe un comprobante y lo asocia a la entrega indicada en la URL.
+export const uploadDeliveryProof = async (req, res, next) => {
+
+  try {
+
+    const delivery = await deliveriesService.addDeliveryProof(
+      req.params.did,
+      req.file
+    );
+
+    res.status(201).json({
+      message: 'Comprobante cargado correctamente',
+      delivery
+    });
+
+  } catch (error) {
+
+    // Si la asociación falla, evitamos dejar el archivo aislado.
+    await removeUploadedFile(req.file);
 
     next(error);
 

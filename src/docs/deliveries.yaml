@@ -323,3 +323,74 @@ paths:
                 status: error
                 error: INTERNAL_SERVER_ERROR
                 message: Error interno del servidor
+
+
+  /api/deliveries/{did}/proof:
+    post:
+      summary: Cargar un comprobante de entrega
+      description: Guarda un archivo en el servidor y asocia sus metadatos a la entrega.
+      tags:
+        - Deliveries
+
+      parameters:
+        - name: did
+          in: path
+          required: true
+          description: ID de la entrega
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - proof
+              properties:
+                proof:
+                  type: string
+                  format: binary
+                  description: Comprobante PDF, JPG o PNG de hasta 5 MB
+
+      responses:
+        "201":
+          description: Comprobante cargado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  delivery:
+                    $ref: '#/components/schemas/Delivery'
+
+        "400":
+          description: Archivo faltante, campo incorrecto o formato inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        "404":
+          description: Entrega no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        "413":
+          description: El archivo supera el límite de 5 MB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        "500":
+          description: Error al guardar el archivo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

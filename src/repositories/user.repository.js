@@ -21,6 +21,17 @@ export const createUser = async (userData) => {
 };
 
 
+export const addUserDocument = async (id, documentData) => {
+
+  return await User.findByIdAndUpdate(
+    id,
+    { $push: { documents: documentData } },
+    { new: true, runValidators: true }
+  );
+
+};
+
+
 // Inserta varios usuarios en una sola operación.
 // Se utiliza para la carga de datos de prueba.
 export const createUsers = async (usersData) => {

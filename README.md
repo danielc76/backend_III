@@ -1,6 +1,6 @@
 # ShipNow API
 
-ShipNow es una **API REST para la gestión de pedidos y entregas**, desarrollada con **Node.js, Express y MongoDB mediante Mongoose**. El sistema permite gestionar usuarios, pedidos y entregas, incluyendo la asignación de repartidores y el seguimiento de los estados.
+ShipNow es una **API REST para la gestión de pedidos y entregas**, desarrollada con **Node.js, Express y MongoDB mediante Mongoose**. El sistema permite gestionar usuarios, pedidos y entregas, incluyendo la asignación de repartidores, el seguimiento de los estados y la carga de documentos y comprobantes con Multer.
 
 El proyecto fue reorganizado aplicando una **arquitectura por capas**, separando responsabilidades entre **Routes, Controllers, Services, Repositories y Models**.
 
@@ -76,6 +76,7 @@ La documentación utiliza schemas de OpenAPI para representar las principales es
 * `Order`
 * `OrderItem`
 * `Delivery`
+* `FileMetadata`
 * `ErrorResponse`
 * `SuccessResponse`
 
@@ -89,6 +90,8 @@ Swagger también documenta las respuestas de error manejadas por la API, entre e
 * Usuario, pedido o entrega inexistente.
 * Operaciones no permitidas.
 * Estados de pedidos o entregas inválidos.
+* Archivos faltantes, no permitidos o demasiado grandes.
+* Campos y tipos de documento inválidos.
 * Cantidades inválidas para la generación de mocks.
 * Errores internos del servidor.
 
@@ -618,12 +621,13 @@ Esto muestra por qué esta lógica pertenece al Service: una acción sobre Deliv
 
 ## Users
 
-| Método | Ruta              | Descripción      |
-| ------ | ----------------- | ---------------- |
-| GET    | `/api/users`      | Listar usuarios  |
-| GET    | `/api/users/:uid` | Obtener usuario  |
-| POST   | `/api/users`      | Crear usuario    |
-| DELETE | `/api/users/:uid` | Eliminar usuario |
+| Método | Ruta                        | Descripción                 |
+| ------ | --------------------------- | --------------------------- |
+| GET    | `/api/users`                | Listar usuarios             |
+| GET    | `/api/users/:uid`           | Obtener usuario             |
+| POST   | `/api/users`                | Crear usuario               |
+| POST   | `/api/users/:uid/documents` | Cargar documento de usuario |
+| DELETE | `/api/users/:uid`           | Eliminar usuario            |
 
 ## Orders
 
@@ -637,13 +641,47 @@ Esto muestra por qué esta lógica pertenece al Service: una acción sobre Deliv
 
 ## Deliveries
 
-| Método | Ruta                          | Descripción       |
-| ------ | ----------------------------- | ----------------- |
-| GET    | `/api/deliveries`             | Listar entregas   |
-| GET    | `/api/deliveries/:did`        | Obtener entrega   |
-| POST   | `/api/deliveries`             | Crear entrega     |
-| PATCH  | `/api/deliveries/:did/status` | Actualizar estado |
-| DELETE | `/api/deliveries/:did`        | Eliminar entrega  |
+| Método | Ruta                          | Descripción                   |
+| ------ | ----------------------------- | ----------------------------- |
+| GET    | `/api/deliveries`             | Listar entregas               |
+| GET    | `/api/deliveries/:did`        | Obtener entrega               |
+| POST   | `/api/deliveries`             | Crear entrega                 |
+| POST   | `/api/deliveries/:did/proof`  | Cargar comprobante de entrega |
+| PATCH  | `/api/deliveries/:did/status` | Actualizar estado             |
+| DELETE | `/api/deliveries/:did`        | Eliminar entrega              |
+
+---
+
+# Carga de archivos
+
+Multer se configura de forma centralizada en `src/config/multer.config.js`. Los routers solamente indican qué configuración y qué nombre de campo utiliza cada endpoint.
+
+La API acepta archivos PDF, JPG y PNG de hasta 5 MB. Los nombres se generan en el servidor para evitar colisiones y los archivos se organizan en:
+
+```text
+uploads/
+├── users/documents/
+└── deliveries/proofs/
+```
+
+La carpeta completa está incluida en `.gitignore`, por lo que los archivos cargados no se envían al repositorio.
+
+## Documentos de usuario
+
+`POST /api/users/:uid/documents`
+
+El cuerpo debe utilizar `multipart/form-data` con:
+
+* `document` → archivo requerido;
+* `documentType` → `user_document` o `driver_license`.
+
+## Comprobantes de entrega
+
+`POST /api/deliveries/:did/proof`
+
+El archivo debe enviarse en el campo `proof`.
+
+MongoDB no guarda el contenido del archivo. Solamente registra el nombre original, nombre generado, ruta, tipo MIME, tamaño, tipo de documento y fecha de carga. Si el archivo no puede asociarse a su entidad, se elimina del servidor para evitar que quede aislado.
 
 ---
 
@@ -734,6 +772,7 @@ tests/
 ├── notFound.test.js
 ├── orders.test.js
 ├── swagger.test.js
+├── uploads.test.js
 └── users.test.js
 ```
 
@@ -743,11 +782,12 @@ tests/
 * validar el entorno y la base;
 * conectar Mongoose;
 * limpiar Users, Orders y Deliveries antes de cada test;
+* eliminar los archivos creados dentro de `uploads/test`;
 * limpiar los datos y desconectar MongoDB al finalizar.
 
 ## Módulos cubiertos
 
-La suite incluye 33 tests funcionales para:
+La suite incluye 42 tests funcionales para:
 
 * Users.
 * Orders.
@@ -755,12 +795,17 @@ La suite incluye 33 tests funcionales para:
 * Mocks.
 * Logger.
 * Swagger.
+* Uploads.
 * Rutas inexistentes.
 
 Se comprueban casos exitosos y errores esperados, incluyendo:
 
 * listados;
 * creación, consulta y eliminación de usuarios;
+* carga y asociación de documentos y comprobantes;
+* persistencia de metadatos y existencia del archivo físico;
+* archivo faltante, formato, tamaño y campo inválidos;
+* tipo de documento y entidad asociada inválidos;
 * creación y consulta de pedidos;
 * cálculos de total y costo de envío;
 * actualización de estados;
@@ -777,9 +822,9 @@ Cada test valida el status HTTP, la estructura del body y los valores importante
 
 ## Datos controlados y limpieza
 
-Los tests crean sus propios usuarios, pedidos y entregas. No dependen de información cargada manualmente ni del orden de ejecución.
+Los tests crean sus propios usuarios, pedidos, entregas y archivos. No dependen de información cargada manualmente ni del orden de ejecución.
 
-Antes de cada caso se eliminan los datos generados por el caso anterior. Al finalizar la suite se realiza una última limpieza y se cierra la conexión con MongoDB.
+Antes de cada caso se eliminan los datos y los archivos de testing generados por el caso anterior. Al finalizar la suite se realiza una última limpieza y se cierra la conexión con MongoDB.
 
 ---
 

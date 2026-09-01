@@ -8,3 +8,6 @@ node_modules/
 # Archivos de logs generados por la aplicación
 logs/*.log
 logs/*.json
+
+# Archivos cargados por los usuarios
+/uploads/

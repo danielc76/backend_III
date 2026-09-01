@@ -5,6 +5,9 @@ import { Router } from 'express';
 // Importamos el Controller porque el Router se encarga únicamente
 // de recibir la petición y derivarla al método correspondiente.
 import * as deliveriesController from '../controllers/delivery.controller.js';
+import { deliveryProofUpload } from '../config/multer.config.js';
+import { UPLOAD_FIELDS } from '../constants/file.constants.js';
+import { uploadSingle } from '../middleware/uploadMiddleware.js';
 
 
 const router = Router();
@@ -33,6 +36,15 @@ router.post('/', deliveriesController.createDelivery);
 router.patch('/:did/status', deliveriesController.updateDeliveryStatus);
 
 
+// POST /api/deliveries/:did/proof
+// Guarda un comprobante y lo asocia a la entrega.
+router.post(
+  '/:did/proof',
+  uploadSingle(deliveryProofUpload, UPLOAD_FIELDS.DELIVERY_PROOF),
+  deliveriesController.uploadDeliveryProof
+);
+
+
 // DELETE /api/deliveries/:did
 // Elimina una entrega utilizando su ID.
 router.delete('/:did', deliveriesController.deleteDelivery);
@@ -41,4 +53,3 @@ router.delete('/:did', deliveriesController.deleteDelivery);
 // Exportamos el Router para que app.js pueda registrarlo
 // bajo /api/deliveries.
 export default router;
-

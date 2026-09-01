@@ -15,6 +15,13 @@ export const ERROR_CODES = {
 
   DRIVER_NOT_AVAILABLE: 'DRIVER_NOT_AVAILABLE',
 
+  FILE_REQUIRED: 'FILE_REQUIRED',
+  INVALID_FILE_TYPE: 'INVALID_FILE_TYPE',
+  FILE_TOO_LARGE: 'FILE_TOO_LARGE',
+  INVALID_FILE_FIELD: 'INVALID_FILE_FIELD',
+  INVALID_DOCUMENT_TYPE: 'INVALID_DOCUMENT_TYPE',
+  UPLOAD_ERROR: 'UPLOAD_ERROR',
+
   INVALID_MOCK_AMOUNT: 'INVALID_MOCK_AMOUNT',
   MOCK_GENERATION_ERROR: 'MOCK_GENERATION_ERROR',
 
@@ -67,6 +74,36 @@ export const ERROR_DICTIONARY = {
   [ERROR_CODES.DRIVER_NOT_AVAILABLE]: {
     statusCode: 409,
     message: 'El repartidor no está disponible para tomar una nueva entrega'
+  },
+
+  [ERROR_CODES.FILE_REQUIRED]: {
+    statusCode: 400,
+    message: 'El archivo es obligatorio'
+  },
+
+  [ERROR_CODES.INVALID_FILE_TYPE]: {
+    statusCode: 400,
+    message: 'El tipo de archivo no está permitido'
+  },
+
+  [ERROR_CODES.FILE_TOO_LARGE]: {
+    statusCode: 413,
+    message: 'El archivo supera el tamaño máximo permitido'
+  },
+
+  [ERROR_CODES.INVALID_FILE_FIELD]: {
+    statusCode: 400,
+    message: 'El campo del archivo no es válido'
+  },
+
+  [ERROR_CODES.INVALID_DOCUMENT_TYPE]: {
+    statusCode: 400,
+    message: 'El tipo de documento no es válido'
+  },
+
+  [ERROR_CODES.UPLOAD_ERROR]: {
+    statusCode: 500,
+    message: 'No se pudo guardar el archivo'
   },
 
   [ERROR_CODES.INVALID_MOCK_AMOUNT]: {

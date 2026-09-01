@@ -1,9 +1,25 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { rm } from 'node:fs/promises';
+import path from 'node:path';
 
 import User from '../src/models/user.model.js';
 import Order from '../src/models/order.model.js';
 import Delivery from '../src/models/delivery.model.js';
+
+
+const TEST_UPLOADS_PATH = path.resolve('uploads', 'test');
+
+
+const cleanTestUploads = async () => {
+
+  // La limpieza se limita a los archivos creados por la suite.
+  await rm(TEST_UPLOADS_PATH, {
+    recursive: true,
+    force: true
+  });
+
+};
 
 
 // Cargamos las variables del entorno de testing antes
@@ -42,6 +58,7 @@ beforeEach(async () => {
   await Delivery.deleteMany({});
   await Order.deleteMany({});
   await User.deleteMany({});
+  await cleanTestUploads();
 
 });
 
@@ -53,6 +70,7 @@ after(async () => {
   await Delivery.deleteMany({});
   await Order.deleteMany({});
   await User.deleteMany({});
+  await cleanTestUploads();
 
   await mongoose.disconnect();
 

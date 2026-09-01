@@ -4,6 +4,7 @@ import * as deliveriesRepository from '../repositories/delivery.repository.js';
 import * as ordersRepository from '../repositories/order.repository.js';
 import * as usersRepository from '../repositories/user.repository.js';
 import { logger } from '../utils/logger.js';
+import { buildFileMetadata } from '../utils/file.utils.js';
 
 
 // Importamos las constantes del dominio para evitar
@@ -12,7 +13,8 @@ import {
   USER_ROLES,
   ORDER_STATUS,
   DELIVERY_STATUS,
-  DELIVERY_PRIORITY
+  DELIVERY_PRIORITY,
+  DOCUMENT_TYPES
 } from '../constants/index.js';
 
 
@@ -229,6 +231,49 @@ logger.info(
   `Entrega ${delivery._id} actualizada a: ${status}`
 );
   return delivery;
+};
+
+
+// Asocia los metadatos de un comprobante a una entrega.
+export const addDeliveryProof = async (id, file) => {
+
+  if (!file) {
+    throw new customError(ERROR_CODES.FILE_REQUIRED);
+  }
+
+  const proofData = buildFileMetadata(
+    file,
+    DOCUMENT_TYPES.DELIVERY_PROOF
+  );
+
+  let delivery;
+
+  try {
+
+    delivery = await deliveriesRepository.addDeliveryProof(id, proofData);
+
+  } catch (error) {
+
+    logger.error(`Error al asociar un comprobante a la entrega ${id}`);
+
+    throw new customError(ERROR_CODES.UPLOAD_ERROR);
+
+  }
+
+  if (!delivery) {
+
+    logger.warn(`Entrega no encontrada al cargar un comprobante: ${id}`);
+
+    throw new customError(ERROR_CODES.DELIVERY_NOT_FOUND);
+
+  }
+
+  logger.info(
+    `Comprobante ${file.filename} asociado a la entrega ${id}`
+  );
+
+  return delivery;
+
 };
 
 // Elimina una entrega por ID.

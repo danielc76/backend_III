@@ -45,14 +45,7 @@ components:
           type: array
           description: Documentos asociados al usuario
           items:
-            type: object
-            properties:
-              name:
-                type: string
-                example: DNI
-              reference:
-                type: string
-                example: documento.pdf
+            $ref: '#/components/schemas/FileMetadata'
 
         createdAt:
           type: string
