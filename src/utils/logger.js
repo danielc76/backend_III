@@ -62,9 +62,8 @@ const errorTransport = new DailyRotateFile({
 export const logger = winston.createLogger({
   levels: customLevels,
 
-  // En desarrollo permite ver también debug.
-  // En producción comienza desde info.
-  level: config.nodeEnv === 'production' ? 'info' : 'debug',
+  // El nivel se puede adaptar a cada entorno sin modificar el código.
+  level: config.logLevel,
 
   transports: [
     // Logs visibles en consola.

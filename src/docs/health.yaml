@@ -1,0 +1,32 @@
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Consultar el estado de la API
+      description: Devuelve información básica del proceso sin exponer datos sensibles.
+      responses:
+        '200':
+          description: La API está disponible
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - environment
+                  - uptime
+                  - timestamp
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  environment:
+                    type: string
+                    example: production
+                  uptime:
+                    type: number
+                    example: 125.42
+                  timestamp:
+                    type: string
+                    format: date-time

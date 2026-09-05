@@ -31,7 +31,19 @@ import { logger } from '../utils/logger.js';
 // La creación puntual de cada entidad queda delegada en el generator.
 export const getMockUsers = (quantity = 10) => {
 
-  return generateUsers(quantity);
+  const users = generateUsers(quantity);
+
+  // Los usuarios simulados necesitan una contraseña cuando se guardan,
+  // pero el endpoint público no debe incluirla en la respuesta.
+  return users.map(user => {
+
+    const publicUser = { ...user };
+
+    delete publicUser.password;
+
+    return publicUser;
+
+  });
 
 };
 

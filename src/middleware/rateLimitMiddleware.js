@@ -17,7 +17,7 @@ export const rateLimitMiddleware = (req, res, next) =>{
     hit.count++
     hits.set(ip, hit)
 
-    if (hit.count >=limit){
+    if (hit.count === limit){
         logger.warn( `Peticiones sospechosas desde la ip ${ip}`)
     }
     next()

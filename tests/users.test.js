@@ -78,6 +78,47 @@ describe('Users API', () => {
   });
 
 
+  it('debería limitar y filtrar la lista de usuarios', async () => {
+
+    await User.create([
+      {
+        firstName: 'Repartidor',
+        lastName: 'Uno',
+        email: 'repartidor.uno@shipnow.com',
+        password: '123456',
+        role: USER_ROLES.DRIVER
+      },
+      {
+        firstName: 'Repartidor',
+        lastName: 'Dos',
+        email: 'repartidor.dos@shipnow.com',
+        password: '123456',
+        role: USER_ROLES.DRIVER
+      },
+      {
+        firstName: 'Cliente',
+        lastName: 'Lista',
+        email: 'cliente.lista@shipnow.com',
+        password: '123456',
+        role: USER_ROLES.CUSTOMER
+      }
+    ]);
+
+    const response = await request(app)
+      .get('/api/users')
+      .query({
+        role: USER_ROLES.DRIVER,
+        limit: 1
+      });
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.have.lengthOf(1);
+    expect(response.body[0].role).to.equal(USER_ROLES.DRIVER);
+    expect(response.body[0]).to.not.have.property('password');
+
+  });
+
+
   it('debería crear un usuario', async () => {
 
     const response = await request(app)
@@ -96,6 +137,7 @@ describe('Users API', () => {
       email: 'nuevo.usuario@shipnow.com',
       role: USER_ROLES.CUSTOMER
     });
+    expect(response.body).to.not.have.property('password');
 
     const savedUser = await User.findOne({
       email: 'nuevo.usuario@shipnow.com'
@@ -191,6 +233,7 @@ describe('Users API', () => {
       email: 'usuario.test@shipnow.com',
       role: USER_ROLES.CUSTOMER
     });
+    expect(response.body).to.not.have.property('password');
 
   });
 

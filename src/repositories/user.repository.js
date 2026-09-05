@@ -1,8 +1,14 @@
 import User from '../models/user.model.js';
 
 
-export const getUsers = async () => {
-  return await User.find();
+export const getUsers = async (filters, limit) => {
+
+  return await User.find(filters)
+    .select('-password')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
 };
 
 

@@ -11,7 +11,7 @@ export const getUsers = async (req, res, next) => {
 
   try {
 
-    const users = await usersService.getUsers();
+    const users = await usersService.getUsers(req.query);
 
     res.json(users);
 

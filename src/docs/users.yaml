@@ -3,9 +3,33 @@ paths:
   /api/users:
     get:
       summary: Obtener todos los usuarios
-      description: Devuelve la lista completa de usuarios registrados en ShipNow.
+      description: Devuelve una lista limitada de usuarios y permite filtrar por rol.
       tags:
         - Users
+
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Cantidad de resultados. El valor por defecto es 20 y el máximo es 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+
+        - name: role
+          in: query
+          required: false
+          description: Rol utilizado para filtrar usuarios
+          schema:
+            type: string
+            enum:
+              - admin
+              - customer
+              - driver
+              - user
+              - store
 
       responses:
         "200":

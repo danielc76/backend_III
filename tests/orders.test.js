@@ -61,6 +61,31 @@ describe('Orders API', () => {
   });
 
 
+  it('debería limitar y filtrar la lista de pedidos', async () => {
+
+    const customer = await createCustomer();
+
+    await createOrder(customer._id);
+    await createOrder(customer._id);
+
+    const deliveredOrder = await createOrder(customer._id);
+    deliveredOrder.status = ORDER_STATUS.DELIVERED;
+    await deliveredOrder.save();
+
+    const response = await request(app)
+      .get('/api/orders')
+      .query({
+        status: ORDER_STATUS.CREATED,
+        limit: 1
+      });
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.have.lengthOf(1);
+    expect(response.body[0].status).to.equal(ORDER_STATUS.CREATED);
+
+  });
+
+
   it('debería crear un pedido y calcular sus valores correctamente', async () => {
 
     const customer = await createCustomer();
@@ -217,6 +242,43 @@ describe('Orders API', () => {
     const errorCode = ERROR_CODES.INVALID_ORDER_STATUS;
 
     expect(response.status).to.equal(400);
+    expect(response.body).to.deep.equal({
+      status: 'error',
+      error: errorCode,
+      message: ERROR_DICTIONARY[errorCode].message
+    });
+
+  });
+
+
+  it('debería eliminar un pedido', async () => {
+
+    const customer = await createCustomer();
+    const order = await createOrder(customer._id);
+
+    const response = await request(app)
+      .delete(`/api/orders/${order._id}`);
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.deep.equal({
+      message: 'Pedido eliminado'
+    });
+
+    const deletedOrder = await Order.findById(order._id);
+
+    expect(deletedOrder).to.equal(null);
+
+  });
+
+
+  it('debería responder error al eliminar un pedido inexistente', async () => {
+
+    const response = await request(app)
+      .delete('/api/orders/000000000000000000000000');
+
+    const errorCode = ERROR_CODES.ORDER_NOT_FOUND;
+
+    expect(response.status).to.equal(404);
     expect(response.body).to.deep.equal({
       status: 'error',
       error: errorCode,

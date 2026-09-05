@@ -27,10 +27,10 @@ describe('Mocks API', () => {
       'firstName',
       'lastName',
       'email',
-      'password',
       'role'
     );
     expect(response.body[0].role).to.equal(USER_ROLES.CUSTOMER);
+    expect(response.body[0]).to.not.have.property('password');
     expect(await User.countDocuments()).to.equal(0);
 
   });
@@ -97,6 +97,7 @@ describe('Mocks API', () => {
     expect(response.body.result.users).to.have.lengthOf(4);
     expect(response.body.result.orders).to.have.lengthOf(2);
     expect(response.body.result.deliveries).to.have.lengthOf(2);
+    expect(response.body.result.users[0]).to.not.have.property('password');
 
     expect(await User.countDocuments()).to.equal(4);
     expect(await Order.countDocuments()).to.equal(2);

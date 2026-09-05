@@ -34,16 +34,49 @@ Además, se centralizaron las **constantes del dominio y los códigos de error**
 
 # Instalación
 
+1. Instalar las dependencias del proyecto:
+
 ```bash
 npm install
+```
+
+2. Crear el archivo local de configuración a partir del ejemplo. En PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+3. Completar `MONGODB_URI` en `.env` y ejecutar la API:
+
+```bash
 npm run dev
 ```
 
-El proyecto utiliza variables de entorno para la configuración. El archivo `.env` no debe subirse al repositorio.
+El proyecto utiliza variables de entorno para separar la configuración del código. El archivo `.env` contiene la configuración real de cada equipo y no debe subirse al repositorio.
+
+## Variables de entorno
+
+| Variable      | Uso                                                        | Ejemplo       |
+| ------------- | ---------------------------------------------------------- | ------------- |
+| `PORT`        | Puerto interno en el que escucha la API                    | `8080`        |
+| `MONGODB_URI` | Conexión a la base de datos                                | Ver `.env.example` |
+| `NODE_ENV`    | Entorno: `development`, `test` o `production`              | `development` |
+| `LOG_LEVEL`   | Nivel mínimo: `debug`, `http`, `info`, `warn`, `error` o `fatal` | `debug` |
+
+Al iniciar, la aplicación valida `PORT`, `MONGODB_URI` y `NODE_ENV`. Si falta una variable crítica o tiene un valor inválido, el proceso finaliza con un mensaje claro en lugar de arrancar con una configuración incompleta.
+
+Los archivos de ejemplo disponibles son:
+
+* `.env.example` → desarrollo local;
+* `.env.test.example` → testing;
+* `.env.docker.example` → ejecución con Docker Compose.
+
+El proyecto no utiliza autenticación JWT ni servicios externos reales. Por eso no necesita un secreto JWT ni una URL externa; el envío de email actual es una simulación interna.
 
 Una vez iniciado el servidor:
 
 * API: `http://localhost:8080`
+* Health check: `http://localhost:8080/health`
 * Swagger UI: `http://localhost:8080/api/docs`
 
 ---
@@ -65,6 +98,7 @@ La documentación está organizada por los principales módulos de ShipNow:
 * **Users** → gestión de usuarios.
 * **Orders** → gestión de pedidos.
 * **Deliveries** → gestión de entregas.
+* **Health** → estado básico de la API.
 * **Mocks** → generación de datos simulados y carga de datos de prueba.
 * **Logger** → endpoint interno para validar los niveles del sistema de logging.
 
@@ -117,7 +151,7 @@ Ejemplo:
 
 Los endpoints de creación, modificación y eliminación realizan operaciones reales sobre la base de datos configurada para el proyecto.
 
-El endpoint del módulo **Logger** se utiliza únicamente como herramienta de validación del sistema de logging y no representa una funcionalidad de negocio.
+Los endpoints de **Mocks** y **Logger** son herramientas internas. Se encuentran disponibles en desarrollo y testing, pero no se montan cuando `NODE_ENV=production`, por lo que responden `404` en ese entorno. Swagger permanece disponible en producción para poder revisar y probar la API durante esta entrega.
 
 ---
 
@@ -337,9 +371,7 @@ ShipNow utiliza los siguientes niveles:
 * `error` → registra errores inesperados de la aplicación.
 * `fatal` → registra fallas críticas, como problemas graves durante la conexión inicial con MongoDB.
 
-En desarrollo se permiten logs desde `debug`.
-
-En producción el nivel se restringe a partir de `info`, reduciendo la cantidad de información registrada.
+El nivel mínimo se configura mediante `LOG_LEVEL`. Si no se indica, se utiliza `debug` en desarrollo y testing, e `info` en producción. De esta manera se puede reducir la cantidad de registros sin modificar el código.
 
 ## Request Logger
 
@@ -469,6 +501,27 @@ Por ejemplo:
 ```
 
 El objetivo de esta implementación es aportar una primera señal de monitoreo ante comportamientos potencialmente anómalos.
+
+---
+
+# Health check
+
+`GET /health` permite comprobar si el proceso de la API está activo. Docker lo consulta automáticamente para determinar el estado del contenedor.
+
+Respuesta esperada:
+
+```json
+{
+  "status": "OK",
+  "environment": "production",
+  "uptime": 2160.9,
+  "timestamp": "2026-09-05T22:25:41.164Z"
+}
+```
+
+El endpoint devuelve un código `200` e información operativa básica, pero no expone credenciales, conexiones ni otros datos sensibles. También queda fuera del request logger para que los controles periódicos de Docker no llenen los logs.
+
+---
 
 # Constantes del dominio
 
@@ -685,6 +738,26 @@ MongoDB no guarda el contenido del archivo. Solamente registra el nombre origina
 
 ---
 
+# Controles de performance
+
+Los listados de Users, Orders y Deliveries no devuelven la colección completa sin control. Todos aceptan `limit`, utilizan un valor predeterminado de 20 y permiten como máximo 100 resultados.
+
+También se pueden reducir las consultas mediante filtros:
+
+```text
+GET /api/users?limit=10&role=driver
+GET /api/orders?limit=20&status=created
+GET /api/deliveries?limit=20&status=assigned
+```
+
+Las consultas se ordenan desde los registros más recientes y utilizan `lean()` cuando solamente necesitan devolver datos. El listado de usuarios tampoco incluye contraseñas. Esto evita transferir información innecesaria y reduce el trabajo de Mongoose.
+
+La carga de archivos acepta únicamente PDF, JPG y PNG, limita cada archivo a 5 MB y controla los errores antes de asociar sus metadatos. Los uploads quedan fuera de Git y, al usar Docker Compose, se conservan en un volumen separado del contenedor.
+
+Los mensajes de detalle, como el email simulado, utilizan el nivel `debug`; el rate limit evita repetir continuamente la misma advertencia. El flujo de las peticiones no contiene tareas síncronas pesadas que bloqueen el Event Loop.
+
+---
+
 # Mocking
 
 La API utiliza **Faker** para generar datos simulados.
@@ -759,6 +832,8 @@ Para ejecutar la suite completa:
 npm test
 ```
 
+Mocha está declarado en `devDependencies` y se instala localmente mediante `npm install`. El comando `npm test` utiliza esa versión del proyecto, por lo que no es necesario instalar Mocha de forma global ni ejecutarlo mediante `npx`.
+
 No es necesario ejecutar `npm run dev` ni iniciar el servidor manualmente.
 
 ## Organización
@@ -767,6 +842,7 @@ No es necesario ejecutar `npm run dev` ni iniciar el servidor manualmente.
 tests/
 ├── setup.js
 ├── deliveries.test.js
+├── health.test.js
 ├── logger.test.js
 ├── mocks.test.js
 ├── notFound.test.js
@@ -787,11 +863,12 @@ tests/
 
 ## Módulos cubiertos
 
-La suite incluye 42 tests funcionales para:
+La suite incluye 50 tests funcionales para:
 
 * Users.
 * Orders.
 * Deliveries.
+* Health check.
 * Mocks.
 * Logger.
 * Swagger.
@@ -801,12 +878,14 @@ La suite incluye 42 tests funcionales para:
 Se comprueban casos exitosos y errores esperados, incluyendo:
 
 * listados;
+* límites y filtros en los listados principales;
+* estado, entorno, uptime y timestamp del health check;
 * creación, consulta y eliminación de usuarios;
 * carga y asociación de documentos y comprobantes;
 * persistencia de metadatos y existencia del archivo físico;
 * archivo faltante, formato, tamaño y campo inválidos;
 * tipo de documento y entidad asociada inválidos;
-* creación y consulta de pedidos;
+* creación, consulta y eliminación de pedidos y entregas;
 * cálculos de total y costo de envío;
 * actualización de estados;
 * sincronización entre pedidos y entregas;
@@ -825,6 +904,92 @@ Cada test valida el status HTTP, la estructura del body y los valores importante
 Los tests crean sus propios usuarios, pedidos, entregas y archivos. No dependen de información cargada manualmente ni del orden de ejecución.
 
 Antes de cada caso se eliminan los datos y los archivos de testing generados por el caso anterior. Al finalizar la suite se realiza una última limpieza y se cierra la conexión con MongoDB.
+
+---
+
+# Producción y Docker
+
+Docker permite ejecutar ShipNow en un entorno reproducible. La **imagen** es la plantilla construida a partir del `Dockerfile`; un **contenedor** es una instancia en ejecución de esa imagen. Docker Compose coordina la API y MongoDB como dos contenedores separados.
+
+## Construir la imagen
+
+Desde la raíz del proyecto:
+
+```bash
+docker build -t shipnow-api .
+```
+
+El `Dockerfile` utiliza Node 22 Alpine, instala solamente las dependencias de producción con `npm ci --omit=dev`, copia el código necesario y ejecuta la API con un usuario sin privilegios. Expone el puerto `8080` e incluye un health check sobre `/health`.
+
+## Ejecutar solamente la API
+
+Si se utiliza una base externa, como MongoDB Atlas, se puede iniciar un único contenedor con las variables del archivo `.env`:
+
+```bash
+docker run --name shipnow-api --env-file .env -e NODE_ENV=production -e LOG_LEVEL=info -p 8080:8080 shipnow-api
+```
+
+Este ejemplo supone que `PORT=8080`. Si se cambia el puerto interno, también debe ajustarse el valor ubicado a la derecha de `-p`.
+
+## Ejecutar la API y MongoDB con Docker Compose
+
+La primera vez, crear el archivo local de Docker a partir del ejemplo. En PowerShell:
+
+```powershell
+Copy-Item .env.docker.example .env.docker
+```
+
+Luego construir e iniciar los servicios:
+
+```bash
+docker compose --env-file .env.docker up --build
+```
+
+Compose crea:
+
+* `api` → la aplicación ShipNow;
+* `mongo` → MongoDB 7, accesible por la API mediante el nombre de servidor `mongo`;
+* una red privada para la comunicación entre ambos servicios;
+* volúmenes para la base, los uploads y los logs.
+
+La API espera a que MongoDB responda correctamente antes de iniciarse. MongoDB no publica su puerto en Windows porque solamente necesita ser accesible desde la red interna de Compose.
+
+Para revisar el estado desde otra terminal:
+
+```bash
+docker compose ps
+curl.exe http://localhost:8080/health
+```
+
+Con los contenedores activos se puede comprobar:
+
+* Health check: `http://localhost:8080/health`
+* Swagger: `http://localhost:8080/api/docs`
+* Endpoint principal: `http://localhost:8080/api/users?limit=1`
+
+## Detener los contenedores
+
+Si Compose se ejecuta en primer plano, `Ctrl + C` detiene los servicios. También se pueden detener y retirar los contenedores y la red con:
+
+```bash
+docker compose down
+```
+
+Los volúmenes nombrados se conservan, por lo que MongoDB, los uploads y los logs pueden reutilizarse en el siguiente inicio. `docker compose down -v` también elimina esos volúmenes y sus datos, por lo que solamente debe usarse cuando se quiere realizar una limpieza completa.
+
+## Archivos que no se incluyen
+
+`.dockerignore` evita copiar dentro de la imagen:
+
+* `node_modules` y dependencias de desarrollo;
+* `.env` y sus variantes con configuración local;
+* `.git` y archivos internos del entorno de trabajo;
+* tests y coverage;
+* logs, uploads y archivos temporales.
+
+Por separado, `.gitignore` evita subir al repositorio `node_modules`, las variantes locales de `.env`, los logs, los uploads, la cobertura y los archivos temporales. Los archivos `.example` sí se versionan porque solamente documentan la estructura esperada y no contienen secretos.
+
+En Compose, los logs y uploads se guardan en volúmenes para no perderlos al reemplazar el contenedor. En un despliegue real con varias instancias, estos datos deberían enviarse a almacenamiento y monitoreo externos en lugar de depender del disco local de una sola máquina.
 
 ---
 
@@ -883,6 +1048,17 @@ Se comprobó:
 * Delivery ya entregada que no puede modificarse.
 * Eliminación.
 * Verificación posterior de la eliminación.
+
+## Docker
+
+Se comprobó:
+
+* Construcción completa de la imagen `shipnow-api:latest`.
+* Inicio conjunto de la API y MongoDB mediante Docker Compose.
+* Estado `healthy` de ambos contenedores.
+* Respuesta `200` de `/health` con `NODE_ENV=production`.
+* Acceso a Swagger desde el contenedor.
+* Respuesta de un endpoint principal de la API.
 
 Estas comprobaciones manuales se complementan con la suite de tests funcionales automatizados incluida en el proyecto.
 

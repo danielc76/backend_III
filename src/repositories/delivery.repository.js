@@ -1,8 +1,13 @@
 import Delivery from '../models/delivery.model.js';
 
 
-export const getDeliveries = async () => {
-  return await Delivery.find();
+export const getDeliveries = async (filters, limit) => {
+
+  return await Delivery.find(filters)
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
 };
 
 

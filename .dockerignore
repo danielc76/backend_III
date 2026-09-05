@@ -1,0 +1,29 @@
+# Dependencias instaladas nuevamente dentro de la imagen.
+node_modules
+
+# Variables locales y posibles secretos.
+.env
+.env.*
+
+# Historial y configuración de herramientas locales.
+.git
+.gitignore
+.vscode
+*.md
+
+# Archivos generados durante la ejecución.
+logs
+*.log
+uploads
+coverage
+.nyc_output
+
+# Los tests no son necesarios para ejecutar producción.
+tests
+
+# Archivos temporales y del sistema operativo.
+npm-debug.log*
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db

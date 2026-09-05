@@ -1,8 +1,13 @@
 import Order from '../models/order.model.js';
 
 
-export const getOrders = async () => {
-  return await Order.find();
+export const getOrders = async (filters, limit) => {
+
+  return await Order.find(filters)
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
 };
 
 

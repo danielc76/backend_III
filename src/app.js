@@ -9,6 +9,7 @@ import ordersRouter from './routes/orders.routes.js';
 import deliveriesRouter from './routes/deliveries.routes.js';
 import mocksRouter from './routes/mocks.routes.js';
 import loggerRouter from './routes/logger.routes.js';
+import healthRouter from './routes/health.routes.js';
 
 import { reqLogger } from './middleware/requestLogger.js';
 import { rateLimitMiddleware } from './middleware/rateLimitMiddleware.js';
@@ -17,6 +18,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { swaggerSpec } from './docs/swagger.config.js';
 import { customError } from './utils/customError.js';
 import { ERROR_CODES } from './constants/error.constants.js';
+import { config } from './config/env.config.js';
 
 const app = express();
 
@@ -25,6 +27,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
+// El health check queda fuera del registro HTTP para evitar
+// generar logs repetitivos cuando Docker lo consulta.
+app.use('/health', healthRouter);
 
 
 // Middleware de logging.
@@ -47,8 +54,14 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/users', usersRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/deliveries', deliveriesRouter);
-app.use('/api/mocks', mocksRouter);
-app.use('/api/logger', loggerRouter);
+
+
+// Las rutas de soporte se utilizan para desarrollo y testing,
+// pero no forman parte de la API expuesta en producción.
+if (config.nodeEnv !== 'production') {
+  app.use('/api/mocks', mocksRouter);
+  app.use('/api/logger', loggerRouter);
+}
 
 
 // Si ninguna ruta pudo resolver la petición,

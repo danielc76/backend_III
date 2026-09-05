@@ -21,12 +21,15 @@ import {
 
 // Logger centralizado para registrar eventos importantes.
 import { logger } from '../utils/logger.js';
+import { getListOptions } from '../utils/listQuery.utils.js';
 
 // Obtiene todos los pedidos.
 // El Service delega la consulta al Repository.
-export const getOrders = async () => {
+export const getOrders = async (query) => {
 
-  return await ordersRepository.getOrders();
+  const { filters, limit } = getListOptions(query, ['status']);
+
+  return await ordersRepository.getOrders(filters, limit);
 
 };
 
@@ -120,11 +123,11 @@ export const createOrder = async (orderData) => {
   );
 
   // Simulación del envío de un email de confirmación.
-  logger.info(
+  logger.debug(
     `[EMAIL SIMULADO] Enviando confirmacion al usuario ${customer}...`
   );
 
-  logger.info(
+  logger.debug(
     `[EMAIL SIMULADO] Tu pedido ${newOrder._id} fue creado. Total: $${total}`
   );
 

@@ -32,6 +32,12 @@ export const DELIVERY_PRIORITY = Object.freeze({
 });
 
 
+export const LIST_LIMITS = Object.freeze({
+  DEFAULT: 20,
+  MAX: 100
+});
+
+
 export {
   ALLOWED_FILE_TYPES,
   DOCUMENT_TYPES,

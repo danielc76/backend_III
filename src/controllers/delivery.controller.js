@@ -10,7 +10,7 @@ export const getDeliveries = async (req, res, next) => {
 
   try {
 
-    const deliveries = await deliveriesService.getDeliveries();
+    const deliveries = await deliveriesService.getDeliveries(req.query);
 
     res.json(deliveries);
 

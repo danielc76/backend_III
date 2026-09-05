@@ -42,7 +42,18 @@ const userSchema = new mongoose.Schema({
   }
 
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: {
+    transform: (document, returnedObject) => {
+
+      // La contraseña se guarda en MongoDB, pero no debe
+      // formar parte de las respuestas de la API.
+      delete returnedObject.password;
+
+      return returnedObject;
+
+    }
+  }
 });
 
 

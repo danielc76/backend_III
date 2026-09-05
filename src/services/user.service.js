@@ -5,12 +5,15 @@ import { ERROR_CODES } from '../constants/error.constants.js';
 import { DOCUMENT_TYPES, USER_ROLES } from '../constants/index.js';
 import { buildFileMetadata } from '../utils/file.utils.js';
 import { logger } from '../utils/logger.js';
+import { getListOptions } from '../utils/listQuery.utils.js';
 
 
 // Obtiene todos los usuarios a través del Repository.
-export const getUsers = async () => {
+export const getUsers = async (query) => {
 
-  return await usersRepository.getUsers();
+  const { filters, limit } = getListOptions(query, ['role']);
+
+  return await usersRepository.getUsers(filters, limit);
 
 };
 

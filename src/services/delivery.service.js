@@ -5,6 +5,7 @@ import * as ordersRepository from '../repositories/order.repository.js';
 import * as usersRepository from '../repositories/user.repository.js';
 import { logger } from '../utils/logger.js';
 import { buildFileMetadata } from '../utils/file.utils.js';
+import { getListOptions } from '../utils/listQuery.utils.js';
 
 
 // Importamos las constantes del dominio para evitar
@@ -30,9 +31,11 @@ import { ERROR_CODES } from '../constants/error.constants.js';
 
 // Obtiene todas las entregas.
 // El Service delega la consulta al Repository.
-export const getDeliveries = async () => {
+export const getDeliveries = async (query) => {
 
-  return await deliveriesRepository.getDeliveries();
+  const { filters, limit } = getListOptions(query, ['status']);
+
+  return await deliveriesRepository.getDeliveries(filters, limit);
 
 };
 

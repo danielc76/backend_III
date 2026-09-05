@@ -1,0 +1,47 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shipnow-api:latest
+    env_file:
+      - .env.docker
+    ports:
+      - "${HOST_PORT:-8080}:${PORT:-8080}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - uploads-data:/app/uploads
+      - logs-data:/app/logs
+    networks:
+      - shipnow-network
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - db.adminCommand('ping').ok
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - shipnow-network
+
+
+volumes:
+  mongo-data:
+  uploads-data:
+  logs-data:
+
+
+networks:
+  shipnow-network:
+    driver: bridge

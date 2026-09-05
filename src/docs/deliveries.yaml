@@ -3,9 +3,32 @@ paths:
   /api/deliveries:
     get:
       summary: Obtener todas las entregas
-      description: Devuelve la lista completa de entregas registradas en ShipNow.
+      description: Devuelve una lista limitada de entregas y permite filtrar por estado.
       tags:
         - Deliveries
+
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Cantidad de resultados. El valor por defecto es 20 y el máximo es 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+
+        - name: status
+          in: query
+          required: false
+          description: Estado utilizado para filtrar entregas
+          schema:
+            type: string
+            enum:
+              - pending
+              - assigned
+              - in_transit
+              - delivered
 
       responses:
         "200":

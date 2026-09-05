@@ -89,6 +89,36 @@ describe('Deliveries API', () => {
   });
 
 
+  it('debería limitar y filtrar la lista de entregas', async () => {
+
+    const customer = await createCustomer();
+    const driver = await createDriver();
+    const order = await createOrder(customer._id);
+
+    await createDelivery(order._id, driver._id);
+    await createDelivery(order._id, driver._id);
+
+    const deliveredDelivery = await createDelivery(
+      order._id,
+      driver._id
+    );
+    deliveredDelivery.status = DELIVERY_STATUS.DELIVERED;
+    await deliveredDelivery.save();
+
+    const response = await request(app)
+      .get('/api/deliveries')
+      .query({
+        status: DELIVERY_STATUS.ASSIGNED,
+        limit: 1
+      });
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.have.lengthOf(1);
+    expect(response.body[0].status).to.equal(DELIVERY_STATUS.ASSIGNED);
+
+  });
+
+
   it('debería crear una entrega y asignarla al pedido', async () => {
 
     const customer = await createCustomer();
@@ -224,6 +254,45 @@ describe('Deliveries API', () => {
     const errorCode = ERROR_CODES.INVALID_DELIVERY_STATUS;
 
     expect(response.status).to.equal(400);
+    expect(response.body).to.deep.equal({
+      status: 'error',
+      error: errorCode,
+      message: ERROR_DICTIONARY[errorCode].message
+    });
+
+  });
+
+
+  it('debería eliminar una entrega', async () => {
+
+    const customer = await createCustomer();
+    const driver = await createDriver();
+    const order = await createOrder(customer._id);
+    const delivery = await createDelivery(order._id, driver._id);
+
+    const response = await request(app)
+      .delete(`/api/deliveries/${delivery._id}`);
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.deep.equal({
+      message: 'Entrega eliminada'
+    });
+
+    const deletedDelivery = await Delivery.findById(delivery._id);
+
+    expect(deletedDelivery).to.equal(null);
+
+  });
+
+
+  it('debería responder error al eliminar una entrega inexistente', async () => {
+
+    const response = await request(app)
+      .delete('/api/deliveries/000000000000000000000000');
+
+    const errorCode = ERROR_CODES.DELIVERY_NOT_FOUND;
+
+    expect(response.status).to.equal(404);
     expect(response.body).to.deep.equal({
       status: 'error',
       error: errorCode,
