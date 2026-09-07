@@ -53,3 +53,23 @@ const swaggerOptions = {
 };
 
 export const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+
+const limitedMethods = ['get', 'post', 'put', 'patch', 'delete'];
+
+// El límite se aplica a todas las rutas registradas después del health check.
+Object.entries(swaggerSpec.paths ?? {}).forEach(([path, pathConfig]) => {
+
+  if (path === '/health') return;
+
+  limitedMethods.forEach((method) => {
+
+    if (pathConfig[method]?.responses) {
+      pathConfig[method].responses['429'] = {
+        $ref: '#/components/responses/RateLimitExceeded'
+      };
+    }
+
+  });
+
+});

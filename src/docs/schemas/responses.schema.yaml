@@ -26,3 +26,21 @@ components:
           type: string
           description: Mensaje de confirmación de la operación
           example: Operación realizada correctamente
+
+  responses:
+
+    RateLimitExceeded:
+      description: Se superó temporalmente el límite de solicitudes
+      headers:
+        Retry-After:
+          description: Segundos restantes antes de volver a intentar
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error: RATE_LIMIT_EXCEEDED
+            message: Se alcanzó el límite de solicitudes. Intentá nuevamente más tarde

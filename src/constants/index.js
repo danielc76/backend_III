@@ -38,6 +38,12 @@ export const LIST_LIMITS = Object.freeze({
 });
 
 
+export const RATE_LIMIT = Object.freeze({
+  MAX_REQUESTS: 60,
+  WINDOW_MS: 60 * 1000
+});
+
+
 export {
   ALLOWED_FILE_TYPES,
   DOCUMENT_TYPES,

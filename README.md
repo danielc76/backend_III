@@ -491,17 +491,11 @@ Este endpoint existe únicamente como herramienta interna para comprobar la conf
 
 ## Rate Limit y monitoreo básico
 
-También se incorporó un middleware de control básico de peticiones.
+También se incorporó un middleware de control de peticiones. Cada dirección IP puede realizar hasta 60 solicitudes por minuto. Al superar ese límite, la API bloquea temporalmente los nuevos intentos con una respuesta `429 Too Many Requests` e informa en el header `Retry-After` cuántos segundos faltan para volver a intentar.
 
-El middleware mantiene un contador temporal por dirección IP y registra una advertencia cuando detecta una cantidad elevada de solicitudes dentro de un período determinado.
+El primer bloqueo se registra como advertencia. Los intentos posteriores reciben la misma respuesta sin generar una advertencia nueva en cada petición, para evitar llenar los logs.
 
-Por ejemplo:
-
-```text
-[warn] Peticiones sospechosas desde la ip ::1
-```
-
-El objetivo de esta implementación es aportar una primera señal de monitoreo ante comportamientos potencialmente anómalos.
+El contador se mantiene en memoria y se reinicia automáticamente al finalizar la ventana. Esta implementación es adecuada para la instancia actual; si la API se distribuyera entre varios contenedores, el contador debería compartirse mediante un servicio externo.
 
 ---
 
@@ -833,7 +827,7 @@ Para ejecutar la suite completa:
 npm test
 ```
 
-Mocha está declarado en `devDependencies` y se instala localmente mediante `npm install`. El comando `npm test` utiliza esa versión del proyecto, por lo que no es necesario instalar Mocha de forma global ni ejecutarlo mediante `npx`.
+Mocha está declarado en `devDependencies` y se instala localmente mediante `npm install`. El script utiliza `npx --no-install`, por lo que resuelve la versión local de Mocha sin depender del `PATH`, sin instalarlo globalmente y sin descargar otra versión. De esta manera, `npm test` funciona de la misma forma en PowerShell, Git Bash y Linux.
 
 No es necesario ejecutar `npm run dev` ni iniciar el servidor manualmente.
 
@@ -848,6 +842,7 @@ tests/
 ├── mocks.test.js
 ├── notFound.test.js
 ├── orders.test.js
+├── rateLimit.test.js
 ├── swagger.test.js
 ├── uploads.test.js
 └── users.test.js
@@ -864,7 +859,7 @@ tests/
 
 ## Módulos cubiertos
 
-La suite incluye 54 tests funcionales para:
+La suite incluye 55 tests funcionales para:
 
 * Users.
 * Orders.
@@ -872,6 +867,7 @@ La suite incluye 54 tests funcionales para:
 * Health check.
 * Mocks.
 * Logger.
+* Rate limit.
 * Swagger.
 * Uploads.
 * Rutas inexistentes.
@@ -897,6 +893,7 @@ Se comprueban casos exitosos y errores esperados, incluyendo:
 * recursos inexistentes;
 * roles no permitidos;
 * estados y cantidades inválidas;
+* bloqueo temporal, respuesta `429` y header `Retry-After`;
 * formato uniforme de los errores.
 
 Cada test valida el status HTTP, la estructura del body y los valores importantes de la respuesta.

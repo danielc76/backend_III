@@ -33,16 +33,18 @@ export const errorHandler = (err, req, res, next) => {
   const errorCode = getErrorCode(err);
   const error = ERROR_DICTIONARY[errorCode];
 
-  // Los errores conocidos de negocio se registran como advertencias.
-  // Los errores inesperados se registran como errores.
-  if (errorCode !== ERROR_CODES.INTERNAL_SERVER_ERROR) {
-    logger.warn(
-      `${req.method} ${req.originalUrl} - ${errorCode}: ${error.message}`
-    );
-  } else {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error inesperado: ${err.message}`
-    );
+  if (!err.skipLog) {
+    // Los errores conocidos de negocio se registran como advertencias.
+    // Los errores inesperados se registran como errores.
+    if (errorCode !== ERROR_CODES.INTERNAL_SERVER_ERROR) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - ${errorCode}: ${error.message}`
+      );
+    } else {
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error inesperado: ${err.message}`
+      );
+    }
   }
 
   // Devolvemos una respuesta uniforme para todos los errores de la API.

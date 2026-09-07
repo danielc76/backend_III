@@ -1,24 +1,64 @@
-import { logger } from "../utils/logger.js";
+import { RATE_LIMIT } from '../constants/index.js';
+import { ERROR_CODES } from '../constants/error.constants.js';
+import { customError } from '../utils/customError.js';
 
-const hits = new Map()
 
-const limit = 5
-const time = 60000
-export const rateLimitMiddleware = (req, res, next) =>{
-   const ip = req.ip
-   const now = Date.now()
-   const hit = hits.get(ip) ?? { count: 0, first: now}
+const scheduleCleanup = (hits, ip, hit, windowMs) => {
 
-   if(now - hit.first > time){
-    hit.count = 0
-    hit.first = now
-   }
+  const timeout = setTimeout(() => {
 
-    hit.count++
-    hits.set(ip, hit)
-
-    if (hit.count === limit){
-        logger.warn( `Peticiones sospechosas desde la ip ${ip}`)
+    if (hits.get(ip) === hit) {
+      hits.delete(ip);
     }
-    next()
-}
+
+  }, windowMs);
+
+  // El temporizador no debe mantener el proceso activo al finalizar la aplicación.
+  timeout.unref?.();
+
+};
+
+
+export const createRateLimitMiddleware = ({
+  limit = RATE_LIMIT.MAX_REQUESTS,
+  windowMs = RATE_LIMIT.WINDOW_MS
+} = {}) => {
+
+  const hits = new Map();
+
+  return (req, res, next) => {
+
+    const ip = req.ip;
+    const now = Date.now();
+    let hit = hits.get(ip);
+
+    if (!hit || now - hit.first >= windowMs) {
+      hit = { count: 0, first: now };
+      hits.set(ip, hit);
+      scheduleCleanup(hits, ip, hit, windowMs);
+    }
+
+    hit.count += 1;
+
+    if (hit.count > limit) {
+      const retryAfter = Math.max(
+        1,
+        Math.ceil((hit.first + windowMs - now) / 1000)
+      );
+
+      res.set('Retry-After', String(retryAfter));
+
+      return next(new customError(ERROR_CODES.RATE_LIMIT_EXCEEDED, {
+        // Se registra el primer bloqueo, pero no cada intento repetido.
+        skipLog: hit.count > limit + 1
+      }));
+    }
+
+    next();
+
+  };
+
+};
+
+
+export const rateLimitMiddleware = createRateLimitMiddleware();

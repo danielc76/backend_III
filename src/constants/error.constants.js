@@ -27,6 +27,7 @@ export const ERROR_CODES = {
 
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   INVALID_DATA: 'INVALID_DATA',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
   FORBIDDEN: 'FORBIDDEN',
   ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
 
@@ -125,6 +126,11 @@ export const ERROR_DICTIONARY = {
   [ERROR_CODES.INVALID_DATA]: {
     statusCode: 400,
     message: 'Los datos enviados no son válidos'
+  },
+
+  [ERROR_CODES.RATE_LIMIT_EXCEEDED]: {
+    statusCode: 429,
+    message: 'Se alcanzó el límite de solicitudes. Intentá nuevamente más tarde'
   },
 
   [ERROR_CODES.FORBIDDEN]: {

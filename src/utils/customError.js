@@ -5,7 +5,7 @@
 // middleware global determine el status HTTP y el mensaje.
 export class customError extends Error {
 
-constructor(code) {
+constructor(code, { skipLog = false } = {}) {
 
 // Inicializamos la clase Error con el código recibido.
 super(code);
@@ -13,6 +13,9 @@ super(code);
 // Guardamos el código para que el errorHandler
 // pueda identificar qué tipo de error ocurrió.
 this.code = code;
+
+// Algunos errores repetidos mantienen la misma respuesta sin llenar los logs.
+this.skipLog = skipLog;
 
 }
 
