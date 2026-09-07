@@ -3,7 +3,6 @@
 // con diferentes niveles de importancia.
 
 import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
 
 import { config } from '../config/env.config.js';
 
@@ -47,16 +46,36 @@ const fileFormat = winston.format.combine(
 );
 
 // Archivo exclusivo para errores.
-// DailyRotateFile permite generar archivos separados
-// por fecha y limitar su tamaño y antigüedad.
-const errorTransport = new DailyRotateFile({
-  filename: 'logs/error-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
+const errorTransport = new winston.transports.File({
+  filename: 'logs/error.log',
   level: 'error',
-  maxFiles: '30d',
-  maxSize: '20m',
+  maxsize: 20 * 1024 * 1024,
+  maxFiles: 5,
   format: fileFormat
 });
+
+// Archivo general con la actividad correspondiente al nivel configurado.
+const combinedTransport = new winston.transports.File({
+  filename: 'logs/combined.log',
+  level: config.logLevel,
+  maxsize: 20 * 1024 * 1024,
+  maxFiles: 5,
+  format: fileFormat
+});
+
+const transports = [
+  errorTransport,
+  combinedTransport
+];
+
+// En desarrollo también mostramos los registros en la consola.
+if (config.nodeEnv === 'development') {
+  transports.push(
+    new winston.transports.Console({
+      format: consoleFormat
+    })
+  );
+}
 
 // Logger centralizado de toda la aplicación.
 export const logger = winston.createLogger({
@@ -64,14 +83,5 @@ export const logger = winston.createLogger({
 
   // El nivel se puede adaptar a cada entorno sin modificar el código.
   level: config.logLevel,
-
-  transports: [
-    // Logs visibles en consola.
-    new winston.transports.Console({
-      format: consoleFormat
-    }),
-
-    // Logs de error persistidos en archivos.
-    errorTransport
-  ]
+  transports
 });

@@ -109,7 +109,7 @@ paths:
                 $ref: '#/components/schemas/User'
 
         "400":
-          description: Faltan datos obligatorios o el usuario ya existe
+          description: Datos obligatorios faltantes, inválidos o usuario existente
           content:
             application/json:
               schema:
@@ -128,6 +128,13 @@ paths:
                     status: error
                     error: USER_ALREADY_EXIST
                     message: El usuario ya existe
+
+                invalidData:
+                  summary: Los datos enviados no son válidos
+                  value:
+                    status: error
+                    error: INVALID_DATA
+                    message: Los datos enviados no son válidos
 
         "403":
           description: No se permite crear un usuario con rol administrador
@@ -175,6 +182,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
+        "400":
+          description: El identificador no tiene un formato válido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error: INVALID_DATA
+                message: Los datos enviados no son válidos
 
         "404":
           description: Usuario no encontrado

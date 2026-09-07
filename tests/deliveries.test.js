@@ -238,6 +238,23 @@ describe('Deliveries API', () => {
   });
 
 
+  it('debería responder error si el ID de la entrega no es válido', async () => {
+
+    const response = await request(app)
+      .get('/api/deliveries/id-invalido');
+
+    const errorCode = ERROR_CODES.INVALID_DATA;
+
+    expect(response.status).to.equal(400);
+    expect(response.body).to.deep.equal({
+      status: 'error',
+      error: errorCode,
+      message: ERROR_DICTIONARY[errorCode].message
+    });
+
+  });
+
+
   it('debería responder error si el estado no es válido', async () => {
 
     const customer = await createCustomer();

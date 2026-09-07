@@ -427,22 +427,23 @@ Actualmente se registran eventos relevantes como:
 
 Esto permite reconstruir qué ocurrió en la aplicación cuando se presenta un problema.
 
-## Persistencia y rotación de logs
+## Persistencia de logs
 
-Además de mostrarse por consola, los errores importantes se persisten en archivos dentro de:
+Los registros se guardan en archivos dentro de:
 
 ```text
 logs/
 ```
 
-Los archivos son generados mediante `winston-daily-rotate-file`.
+La actividad general se guarda en `logs/combined.log` y los niveles `error` y `fatal` también se guardan en `logs/error.log`.
 
 La configuración actual permite:
 
-* Rotar los archivos por fecha.
 * Limitar el tamaño máximo de cada archivo.
-* Mantener los registros durante un período determinado.
+* Conservar una cantidad controlada de archivos anteriores.
 * Evitar que los archivos de logs crezcan indefinidamente.
+
+La salida por consola se habilita solamente en desarrollo. En testing y producción los registros se escriben en los archivos correspondientes de acuerdo con `LOG_LEVEL`.
 
 Los archivos generados por la aplicación no forman parte del repositorio.
 
@@ -484,7 +485,7 @@ Por ejemplo:
 [fatal] Prueba de nivel FATAL
 ```
 
-Los niveles pueden observarse en la consola y los niveles persistidos correspondientes pueden verificarse en la carpeta `logs/`.
+En desarrollo los niveles pueden observarse en la consola. Los registros persistidos pueden verificarse en `logs/combined.log` y los errores en `logs/error.log`.
 
 Este endpoint existe únicamente como herramienta interna para comprobar la configuración del sistema de logging y no representa una funcionalidad del negocio.
 
@@ -863,7 +864,7 @@ tests/
 
 ## Módulos cubiertos
 
-La suite incluye 50 tests funcionales para:
+La suite incluye 54 tests funcionales para:
 
 * Users.
 * Orders.
@@ -892,6 +893,7 @@ Se comprueban casos exitosos y errores esperados, incluyendo:
 * generación de datos mock en memoria;
 * persistencia controlada de mocks;
 * datos obligatorios faltantes;
+* datos e identificadores inválidos;
 * recursos inexistentes;
 * roles no permitidos;
 * estados y cantidades inválidas;

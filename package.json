@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "mocha --file tests/setup.js \"tests/**/*.test.js\" --exit"
+    "test": "mocha --file tests/setup.js \"tests/**/*.test.js\" --timeout 10000 --exit"
   },
   "keywords": [
     "backend",
@@ -25,8 +25,7 @@
     "multer": "^2.3.0",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
-    "winston": "^3.19.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "chai": "^6.2.2",

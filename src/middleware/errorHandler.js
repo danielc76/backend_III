@@ -5,19 +5,39 @@ import {
 
 import { logger } from '../utils/logger.js';
 
+
+const mongooseErrorNames = [
+  'ValidationError',
+  'CastError'
+];
+
+
+const getErrorCode = (error) => {
+
+  if (ERROR_DICTIONARY[error.code]) {
+    return error.code;
+  }
+
+  if (mongooseErrorNames.includes(error.name)) {
+    return ERROR_CODES.INVALID_DATA;
+  }
+
+  return ERROR_CODES.INTERNAL_SERVER_ERROR;
+
+};
+
+
 // Middleware centralizado para manejar todos los errores de la API.
 export const errorHandler = (err, req, res, next) => {
 
-  // Buscamos el código del error dentro del diccionario.
-  // Si no existe, utilizamos el error genérico de servidor.
-  const error = ERROR_DICTIONARY[err.code]
-    || ERROR_DICTIONARY[ERROR_CODES.INTERNAL_SERVER_ERROR];
+  const errorCode = getErrorCode(err);
+  const error = ERROR_DICTIONARY[errorCode];
 
   // Los errores conocidos de negocio se registran como advertencias.
   // Los errores inesperados se registran como errores.
-  if (err.code) {
+  if (errorCode !== ERROR_CODES.INTERNAL_SERVER_ERROR) {
     logger.warn(
-      `${req.method} ${req.originalUrl} - ${err.code}: ${error.message}`
+      `${req.method} ${req.originalUrl} - ${errorCode}: ${error.message}`
     );
   } else {
     logger.error(
@@ -30,9 +50,7 @@ export const errorHandler = (err, req, res, next) => {
 
     status: 'error',
 
-    // Si el error tiene código, lo mostramos.
-    // Si no, utilizamos INTERNAL_SERVER_ERROR.
-    error: err.code || ERROR_CODES.INTERNAL_SERVER_ERROR,
+    error: errorCode,
 
     // El mensaje sale del diccionario centralizado.
     message: error.message

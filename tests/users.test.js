@@ -219,6 +219,32 @@ describe('Users API', () => {
   });
 
 
+  it('debería responder error si el rol no es válido', async () => {
+
+    const response = await request(app)
+      .post('/api/users')
+      .send({
+        firstName: 'Nuevo',
+        lastName: 'Usuario',
+        email: 'rol.invalido@shipnow.com',
+        password: '123456',
+        role: 'rol_invalido'
+      });
+
+    const errorCode = ERROR_CODES.INVALID_DATA;
+
+    expect(response.status).to.equal(
+      ERROR_DICTIONARY[errorCode].statusCode
+    );
+    expect(response.body).to.deep.equal({
+      status: 'error',
+      error: errorCode,
+      message: ERROR_DICTIONARY[errorCode].message
+    });
+
+  });
+
+
   it('debería obtener un usuario por su ID', async () => {
 
     const user = await createTestUser();
@@ -250,6 +276,25 @@ describe('Users API', () => {
       status: 'error',
       error: ERROR_CODES.USER_NOT_FOUND,
       message: ERROR_DICTIONARY[ERROR_CODES.USER_NOT_FOUND].message
+    });
+
+  });
+
+
+  it('debería responder error si el ID del usuario no es válido', async () => {
+
+    const response = await request(app)
+      .get('/api/users/id-invalido');
+
+    const errorCode = ERROR_CODES.INVALID_DATA;
+
+    expect(response.status).to.equal(
+      ERROR_DICTIONARY[errorCode].statusCode
+    );
+    expect(response.body).to.deep.equal({
+      status: 'error',
+      error: errorCode,
+      message: ERROR_DICTIONARY[errorCode].message
     });
 
   });

@@ -26,6 +26,7 @@ export const ERROR_CODES = {
   MOCK_GENERATION_ERROR: 'MOCK_GENERATION_ERROR',
 
   VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INVALID_DATA: 'INVALID_DATA',
   FORBIDDEN: 'FORBIDDEN',
   ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
 
@@ -119,6 +120,11 @@ export const ERROR_DICTIONARY = {
   [ERROR_CODES.VALIDATION_ERROR]: {
     statusCode: 400,
     message: 'Faltan datos obligatorios'
+  },
+
+  [ERROR_CODES.INVALID_DATA]: {
+    statusCode: 400,
+    message: 'Los datos enviados no son válidos'
   },
 
   [ERROR_CODES.FORBIDDEN]: {
